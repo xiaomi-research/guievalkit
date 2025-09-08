@@ -6,12 +6,16 @@ Download [Android Control](https://github.com/google-research/google-research/tr
 ```bash
 pip3 install tensorflow android_env
 
+cd guievalkit/data
+
 python3 process_ac.py
 ```
 
 ## CAGUI (Agent)
 
 ```bash
+cd guievalkit/data
+
 mkdir cagui_agent && cd cagui_agent
 huggingface-cli download openbmb/CAGUI --repo-type dataset --include "CAGUI_agent/**" --local-dir ./ --local-dir-use-symlinks False --resume-download
 mv CAGUI_agent test
