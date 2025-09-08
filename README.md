@@ -7,7 +7,7 @@ GUIEvalKit is an open-source evaluation toolkit for GUI agents, allowing practit
 This work has been tested in the following environment:
 * `python == 3.10.12`
 * `torch == 2.7.1+cu126`
-* `transformers == 4.56.0.dev0`
+* `transformers == 4.56.1`
 * `vllm == 0.10.1`
 
 ## Supported Models
