@@ -12,16 +12,16 @@ This work has been tested in the following environment:
 
 ## Supported Models
 
-| Model        | Model Name                                                                     | Organization |
-|--------------|--------------------------------------------------------------------------------|--------------|
-| Qwen2.5-VL   | `qwen2.5-vl-3/7b-instruct`                                                     | Alibaba      |
-| GUI-Owl      | `gui-owl-7/32b`                                                                | Alibaba      |
-| UI-Venus     | `ui-venus-navi-7b`, `ui-venus-navi-72b`                                        | Ant Group    |
-| UI-TARS      | `ui-tars-2/7/72b-sft`, `ui-tars-7/72b-dpo`                                     | Bytedance    |
-| UI-TARS-1.5  | `ui-tars-1.5-7b`                                                               | Bytedance    |
-| AgentCPM-GUI | `agentcpm-gui-8b`                                                              | ModelBest    |
-| MiMo-VL      | `mimo-vl-7b-sft`, `mimo-vl-7b-sft-2508`, `mimo-vl-7b-rl`, `mimo-vl-7b-rl-2508` | Xiaomi       |
-| GLM-V        | `glm-4.1v-9b-thinking`, `glm-4.5v`                                             | Zhipu AI     |
+| Model        | Model Name                                     | Organization |
+|--------------|------------------------------------------------|--------------|
+| Qwen2.5-VL   | `qwen2.5-vl-3/7b-instruct`                     | Alibaba      |
+| GUI-Owl      | `gui-owl-7/32b`                                | Alibaba      |
+| UI-Venus     | `ui-venus-navi-7b`, `ui-venus-navi-72b`        | Ant Group    |
+| UI-TARS      | `ui-tars-2/7/72b-sft`, `ui-tars-7/72b-dpo`     | Bytedance    |
+| UI-TARS-1.5  | `ui-tars-1.5-7b`                               | Bytedance    |
+| AgentCPM-GUI | `agentcpm-gui-8b`                              | ModelBest    |
+| MiMo-VL      | `mimo-vl-7b-sft/rl`, `mimo-vl-7b-sft/rl-2508`  | Xiaomi       |
+| GLM-V        | `glm-4.1v-9b-thinking`, `glm-4.5v`             | Zhipu AI     |
 
 1. We find that `qwen2.5-vl-32b-instruct` and `qwen2.5-vl-72b-instruct` exhibit significant hallucinations in GUI agent tasks. Therefore, we exclude them from the evaluation.
 2. We discard `"open_app(app_name=\'\')\n"` action when applying UI-TARS models.
