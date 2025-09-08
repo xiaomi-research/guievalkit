@@ -4,9 +4,9 @@
 
 Download [Android Control](https://github.com/google-research/google-research/tree/master/android_control) and save at ``guievalkit/data/android_control``.
 ```bash
-pip3 install tensorflow android_env
-
 cd guievalkit/data
+
+pip3 install tensorflow android_env
 
 python3 process_ac.py
 ```
@@ -26,12 +26,16 @@ mv CAGUI_agent test
 Download [AiTZ](https://github.com/IMNearth/CoAT) and save at ``guievalkit/data/android_in_the_zoo``.
 
 ```bash
+cd guievalkit/data
+
 python3 process_aitz.py
 ```
 
 ## GUI Odyssey
 
 ```bash
+cd guievalkit/data
+
 huggingface-cli download --repo-type dataset --resume-download OpenGVLab/GUI-Odyssey --local-dir gui_odyssey
 cp ./utils/preprocessing.py gui_odyssey
 cp ./utils/format_converter.py gui_odyssey
