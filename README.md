@@ -9,10 +9,6 @@ This work has been tested in the following environment:
 * `torch == 2.7.1+cu126`
 * `transformers == 4.56.0.dev0`
 * `vllm == 0.10.1`
-* `flashinfer-python`
-* `qwen-agent`
-* `qwen_vl_utils`
-* `python-Levenshtein`
 
 ## Supported Models
 
