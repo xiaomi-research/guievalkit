@@ -23,10 +23,10 @@ This work has been tested in the following environment:
 | MiMo-VL      | `mimo-vl-7b-sft/rl`, `mimo-vl-7b-sft/rl-2508`  | Xiaomi       |
 | GLM-V        | `glm-4.1v-9b-thinking`, `glm-4.5v`             | Zhipu AI     |
 
-1. We find that `qwen2.5-vl-32b-instruct` and `qwen2.5-vl-72b-instruct` exhibit significant hallucinations in GUI agent tasks. Therefore, we exclude them from the evaluation.
-2. We discard `"open_app(app_name=\'\')\n"` action when applying UI-TARS models.
-3. We discard `open_app` and `answer` actions when applying `glm-4.1v-9b-thinking` and `glm-4.5v`.
-4. We discard `"Launch(app='')\n"` action when applying UI-Venus models.
+1. We find that `qwen2.5-vl-32/72b-instruct` exhibits significant hallucinations in GUI agent tasks. Therefore, we exclude them from the evaluation.
+2. We discard `open_app(app_name='')` action when applying UI-TARS models.
+3. We discard `open_app` and `answer` actions when applying GLM-V models.
+4. We discard `Launch(app='')` action when applying UI-Venus models.
 
 ## Supported Benchmarks
 
