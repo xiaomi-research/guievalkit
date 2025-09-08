@@ -30,12 +30,12 @@ This work has been tested in the following environment:
 
 ## Supported Benchmarks
 
-| Dataset        | Task Name                                   | Task      | Description                         |
-|----------------|---------------------------------------------|-----------|-------------------------------------|
-| AndroidControl | `androidcontrol_low`, `androidcontrol_high` | Agent     | 1680 episides, (10814 - 653) steps  |
-| CAGUI          | `cagui_agent`                               | Agent     | 600 episodes, 4516 steps            |
-| GUI Odyssey    | `gui_odyssey`                               | Agent     | 1933 episodes, 29426 steps          |
-| AiTZ           | `aitz`                                      | Agent     | 506 episodes, 4724 steps            |
+| Dataset        | Task Name                  | Task      | Description                         |
+|----------------|----------------------------|-----------|-------------------------------------|
+| AndroidControl | `androidcontrol_low/high`  | Agent     | 1680 episides, (10814 - 653) steps  |
+| CAGUI          | `cagui_agent`              | Agent     | 600 episodes, 4516 steps            |
+| GUI Odyssey    | `gui_odyssey`              | Agent     | 1933 episodes, 29426 steps          |
+| AiTZ           | `aitz`                     | Agent     | 506 episodes, 4724 steps            |
 
 1. We remove the `OPEN_APP` step when evaluating the AndroidControl benchmark. 
 
