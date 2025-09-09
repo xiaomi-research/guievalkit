@@ -12,32 +12,25 @@ This work has been tested in the following environment:
 
 ## Supported Models
 
-| Model        | Model Name                                    | Organization |
-|--------------|-----------------------------------------------|--------------|
-| Qwen2.5-VL   | `qwen2.5-vl-3/7b-instruct`                    | Alibaba      |
-| GUI-Owl      | `gui-owl-7/32b`                               | Alibaba      |
-| UI-Venus     | `ui-venus-navi-7/72b`                         | Ant Group    |
-| UI-TARS      | `ui-tars-2/7/72b-sft`, `ui-tars-7/72b-dpo`    | Bytedance    |
-| UI-TARS-1.5  | `ui-tars-1.5-7b`                              | Bytedance    |
-| AgentCPM-GUI | `agentcpm-gui-8b`                             | ModelBest    |
-| MiMo-VL      | `mimo-vl-7b-sft/rl`, `mimo-vl-7b-sft/rl-2508` | Xiaomi       |
-| GLM-V        | `glm-4.1v-9b-thinking`, `glm-4.5v`            | Zhipu AI     |
-
-1. We find `qwen2.5-vl-32/72b-instruct` exhibits significant hallucinations in GUI agent tasks. Therefore, we exclude them from the evaluation.
-2. We discard `open_app(app_name='')` action when applying UI-TARS models.
-3. We discard `open_app` and `answer` actions when applying GLM-V models.
-4. We discard `Launch(app='')` action when applying UI-Venus models.
+| Model                                                   | Model Name                                    | Organization |
+|---------------------------------------------------------|-----------------------------------------------|--------------|
+| [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL)      | `qwen2.5-vl-3/7/32/72b-instruct`              | Alibaba      |
+| [GUI-Owl](https://github.com/X-PLUG/MobileAgent)        | `gui-owl-7/32b`                               | Alibaba      |
+| [UI-Venus](https://github.com/inclusionAI/UI-Venus)     | `ui-venus-navi-7/72b`                         | Ant Group    |
+| [UI-TARS](https://github.com/bytedance/UI-TARS)         | `ui-tars-2/7/72b-sft`, `ui-tars-7/72b-dpo`    | Bytedance    |
+| [UI-TARS-1.5](https://github.com/bytedance/UI-TARS)     | `ui-tars-1.5-7b`                              | Bytedance    |
+| [AgentCPM-GUI](https://github.com/OpenBMB/AgentCPM-GUI) | `agentcpm-gui-8b`                             | ModelBest    |
+| [MiMo-VL](https://github.com/XiaomiMiMo/MiMo-VL)        | `mimo-vl-7b-sft/rl`, `mimo-vl-7b-sft/rl-2508` | Xiaomi       |
+| [GLM-V](https://github.com/zai-org/GLM-V)               | `glm-4.1v-9b-thinking`, `glm-4.5v`            | Zhipu AI     |
 
 ## Supported Benchmarks
 
-| Dataset        | Task Name                  | Task      | Description                         |
-|----------------|----------------------------|-----------|-------------------------------------|
-| AndroidControl | `androidcontrol_low/high`  | Agent     | 1680 episides, (10814 - 653) steps  |
-| CAGUI          | `cagui_agent`              | Agent     | 600 episodes, 4516 steps            |
-| GUI Odyssey    | `gui_odyssey`              | Agent     | 1933 episodes, 29426 steps          |
-| AiTZ           | `aitz`                     | Agent     | 506 episodes, 4724 steps            |
-
-1. We remove the `OPEN_APP` step when evaluating the AndroidControl benchmark. 
+| Dataset                                                                                          | Task Name                  | Task      | Description                        |
+|--------------------------------------------------------------------------------------------------|----------------------------|-----------|------------------------------------|
+| [AndroidControl](https://github.com/google-research/google-research/tree/master/android_control) | `androidcontrol_low/high`  | Agent     | 1680 episodes, (10814 - 653) steps |
+| [CAGUI](https://huggingface.co/datasets/openbmb/CAGUI)                                           | `cagui_agent`              | Agent     | 600 episodes, 4516 steps           |
+| [GUI Odyssey](https://github.com/OpenGVLab/GUI-Odyssey)                                          | `gui_odyssey`              | Agent     | 1933 episodes, 29426 steps         |
+| [AiTZ](https://github.com/IMNearth/CoAT)                                                         | `aitz`                     | Agent     | 506 episodes, 4724 steps           |
 
 ## Data Preparation
 
@@ -49,10 +42,15 @@ Please update the files [dataset_info.json](./config/dataset_info.json) and [mod
 
 ## Evaluation
 
-```commandline
-python3 run.py --model agentcpm-gui-8b --dataset cagui_agent --mode all --outputs outputs/agentcpm-gui-8b/cagui_agent --use-vllm
+```bash
+python3 run.py \
+  --model agentcpm-gui-8b \
+  --dataset cagui_agent \
+  --mode all \
+  --outputs outputs/agentcpm-gui-8b/cagui_agent \
+  --use-vllm
 ```
-**Arguments**
+**Arguments:**
 - `--model (str)`: Set the model name that is supported in GUIEvalKit (defined in `config/model_info.json`).
 - `--dataset (str)`: Set the benchmark name that is supported in GUIEvalKit (defined in `config/dataset_info.json`).
 - `--mode (str, default to 'all', choices are ['all', 'infer', 'eval'])`: When `mode` set to `all`, will perform both inference and evaluation; when set to `infer`, will only perform the inference; when set to `eval`, will only perform the evaluation.
@@ -62,7 +60,7 @@ python3 run.py --model agentcpm-gui-8b --dataset cagui_agent --mode all --output
 - `--use-vllm`: Use this argument if you want to inference with `vllm`, otherwise `transformers` will be adopted.
 - `--over-size`: Use this argument for deploying large models on four GPUs and inferring with `vllm`. 
 
-Please check [here](./docs/results.md) for the detailed evaluation results.
+**Please check [here](./docs/results.md) for the detailed evaluation results.**
 
 ## Development Guide
 
