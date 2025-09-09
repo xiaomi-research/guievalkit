@@ -33,10 +33,10 @@
         "folder_name": "models/MiMo-VL-7B-RL"
     },
     "mimo-vl-7b-sft-2508": {
-        "folder_name": "models/MiMo-VL-7B-SFT-0808"
+        "folder_name": "models/MiMo-VL-7B-SFT-2508"
     },
     "mimo-vl-7b-rl-2508": {
-        "folder_name": "models/MiMo-VL-7B-RL-0808"
+        "folder_name": "models/MiMo-VL-7B-RL-2508"
     },
     "glm-4.1v-9b-thinking": {
         "folder_name": "models/GLM-4.1V-9B-Thinking"
