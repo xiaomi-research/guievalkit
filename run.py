@@ -116,7 +116,11 @@ def main():
 
                     with ThreadPoolExecutor(max_workers=16) as tpexecutor:
 
-                        for episode_batch_start in tqdm(range(0, len(episode_files), args.batch_size), desc="Predicting on {}".format(os.path.join(_datasets[args.dataset]["folder_name"], _datasets[args.dataset]["split"], dataset))):
+                        for episode_batch_start in tqdm(
+                                range(0, len(episode_files), args.batch_size),
+                                desc="Predicting on {}".format(os.path.join(
+                                    _datasets[args.dataset]["folder_name"],
+                                    _datasets[args.dataset]["split"], dataset))):
                             episode_files_per_batch = episode_files[
                                 episode_batch_start: episode_batch_start + args.batch_size
                             ]
