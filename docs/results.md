@@ -1,5 +1,7 @@
 ## Agent Evaluation Results
 
+The evaluation results are reported as Type Accuracy / Step Success Rate.
+
 | Model                              | Android Control-Low   | Android Control-High  | GUI-Odyssey           | AiTZ                  | CAGUI-Agent           |
 |------------------------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|
 | UI-TARS-2B-SFT                     | 97.82 / 93.60         | 82.29 / 74.20         | 85.97 / 62.86         | 79.93 / 62.40         | 86.05 / 64.44         |
