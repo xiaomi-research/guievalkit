@@ -1,6 +1,6 @@
 ## Agent Evaluation Results
 
-| Model                              | Android Control-Low   | Android Control-High  | GUI-Odyssey           | AiTZ                  | CAGUI                 |
+| Model                              | Android Control-Low   | Android Control-High  | GUI-Odyssey           | AiTZ                  | CAGUI-Agent           |
 |------------------------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|
 | UI-TARS-2B-SFT                     | 97.82 / 93.60         | 82.29 / 74.20         | 85.97 / 62.86         | 79.93 / 62.40         | 86.05 / 64.44         |
 | Qwen2.5-VL-3B                      | 93.16 / 84.00         | 76.64 / 62.62         | 61.94 / 45.99         | 76.10 / 60.61         | 83.55 / 59.06         |
