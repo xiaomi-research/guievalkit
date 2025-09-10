@@ -39,6 +39,7 @@ def model_config_handler(model_name):
         TOKENIZER_CLASS = AutoProcessor
     else:
         raise ValueError(f"Model {model_name} not found.")
+
     return {
         'tokenizer': TOKENIZER_CLASS,
         'llm': LLM_CLASS,

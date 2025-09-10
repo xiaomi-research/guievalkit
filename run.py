@@ -112,15 +112,15 @@ def main():
                 else:
                     continue
 
-                print("Loading dataset: {}".format(
-                    os.path.join(_datasets[args.dataset]["folder_name"], _datasets[args.dataset]["split"], dataset)))
-
                 with open(output_file, "w", encoding="utf-8") as f_out:
+
                     with ThreadPoolExecutor(max_workers=16) as tpexecutor:
 
                         for episode_batch_start in tqdm(
-                            range(0, len(episode_files), args.batch_size), position=0, desc="Running episode batch"
-                        ):
+                                range(0, len(episode_files), args.batch_size),
+                                desc="Predicting on {}".format(os.path.join(
+                                    _datasets[args.dataset]["folder_name"],
+                                    _datasets[args.dataset]["split"], dataset))):
                             episode_files_per_batch = episode_files[
                                 episode_batch_start: episode_batch_start + args.batch_size
                             ]
@@ -151,10 +151,7 @@ def main():
                                     )
                                 )
 
-                            for f in tqdm(
-                                as_completed(batch_future), total=len(batch_future),
-                                position=1, leave=False, desc="Preparing inputs"
-                            ):
+                            for f in as_completed(batch_future):
                                 batch_all_tasks.append(f.result())
 
                             batch_all_task_value = []
@@ -167,10 +164,7 @@ def main():
                                 batch_tasks = batch_all_task_value[batch_start: batch_start + args.batch_size]
                                 tasks.append(ppexecutor.submit(run_step_batch, args.model, batch_tasks, args.use_vllm))
 
-                            for task in tqdm(
-                                as_completed(tasks), total=len(tasks), position=2,
-                                leave=False, dynamic_ncols=True, desc="Running step batch"
-                            ):
+                            for task in as_completed(tasks):
                                 try:
                                     batch_steps = task.result()
                                 except Exception as e:
