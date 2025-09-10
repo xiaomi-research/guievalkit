@@ -62,9 +62,13 @@ python3 run.py \
 
 **Please check [here](./docs/results.md) for the detailed evaluation results.**
 
+<!--
+
 ## Development Guide
 
 To add new GUI agents and benchmarks to GUIEvalKit, please refer to the [Development Guide](./docs/development.md).
+
+-->
 
 ## Acknowledgement
 
