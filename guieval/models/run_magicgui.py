@@ -220,7 +220,7 @@ def prepare_task_input(step, image_path, history_actions: list, data_name):
     images = [image_path, ]
     history_queries = [(_action.get("low_instruction")
                         if _action.get("low_instruction") else
-                        aitw_2_gui_owl_action(_action))
+                        aitw_2_magicgui_action(_action))
                        for _action in history_actions]
     dedupped_history_queries = list()
     for _query in history_queries:
