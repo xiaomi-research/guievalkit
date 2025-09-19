@@ -206,7 +206,7 @@ def aitw_2_magicgui_action(aitw_action):
         app = aitw_action['result_action_app_name']
         return f'call_api({app},open)'
     else:
-        print('GUI_OWL Action: ', aitw_action)
+        print('MagicGUI Action: ', aitw_action)
         raise NotImplementedError
 
     return ""
