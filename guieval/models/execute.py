@@ -14,6 +14,7 @@ import guieval.models.run_uitars_1p5 as run_uitars_1p5
 import guieval.models.run_uitars_1 as run_uitars_1
 import guieval.models.run_gui_owl as run_gui_owl
 import guieval.models.run_uivenus_navi as run_uivenus_navi
+import guieval.models.run_magicgui as run_magicgui
 import guieval.utils.global_tokenizer as global_tokenizer
 
 
@@ -104,6 +105,11 @@ def prepare_inputs(model_name, episode, episode_dir, episode_file, subset, datas
         global_tokenizer._tokenizer.image_processor.min_pixels = min_px
         return run_uivenus_navi.prepare_task_inputs(
             episode, episode_dir, episode_file, subset, dataset, global_tokenizer._tokenizer, use_vllm)
+    elif model_name in ["magicgui-cpt", "magicgui-rft"]:
+        global_tokenizer._tokenizer.image_processor.max_pixels = run_magicgui.MAX_PIXELS
+        global_tokenizer._tokenizer.image_processor.min_pixels = run_magicgui.MIN_PIXELS
+        return run_magicgui.prepare_task_inputs(
+            episode, episode_dir, episode_file, subset, dataset)
 
 
 def run_step_batch(model_name, batch_tasks, use_vllm):
@@ -130,6 +136,8 @@ def run_step_batch(model_name, batch_tasks, use_vllm):
             results = run_gui_owl.run_task_batch(_llm, global_tokenizer._tokenizer, batch_tasks, use_vllm)
         elif model_name in ["ui-venus-navi-7b", "ui-venus-navi-72b"]:
             results = run_uivenus_navi.run_task_batch(_llm, global_tokenizer._tokenizer, batch_tasks, use_vllm)
+        elif model_name in ["magicgui-cpt", "magicgui-rft"]:
+            results = run_magicgui.run_task_batch(_llm, global_tokenizer._tokenizer, batch_tasks, use_vllm)
         else:
             results = list()
     except Exception as e:
