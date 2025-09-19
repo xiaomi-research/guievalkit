@@ -143,7 +143,7 @@ def magicgui_2_minicpm(output_text):
         return dict()
 
 
-def aitw_2_gui_owl_action(aitw_action):
+def aitw_2_magicgui_action(aitw_action):
 
     ex_action_type = aitw_action['result_action_type']
 
