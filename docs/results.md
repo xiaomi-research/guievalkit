@@ -19,6 +19,8 @@ The evaluation results are reported as Type Accuracy / Step Success Rate.
 | UI-Venus-Navi-7B                   | 92.17 / 86.16         | 79.05 / 68.61         | 87.30 / 71.09         | 79.06 / 65.01         | 85.16 / 64.57         |
 | GUI-Owl-7B                         | 83.06 / 77.01         | 81.52 / 72.01         | 78.67 / 61.26         | 74.53 / 60.33         | 82.44 / 60.25         |
 | GUI-Owl-7B (w/o thinking)          | 91.05 / 86.25         | 81.60 / 72.66         | 81.58 / 65.22         | 76.48 / 63.27         | 81.73 / 59.43         |
+| MagicGUI-CPT (7B)                  | 88.91 / 81.19         | 78.50 / 67.39         | 88.84 / 74.70         | 65.45 / 44.90         | 72.05 / 46.15         |
+| MagicGUI-RFT (7B)                  | 95.77 / 91.78         | 81.47 / 72.76         | 85.29 / 72.78         | 64.20 / 44.50         | 78.52 / 52.81         |
 | AgentCPM-GUI-8B                    | 92.80 / 88.60         | 76.40 / 67.93         | **90.82** / **74.84** | **85.46** / **76.08** | **96.88** / **91.32** |
 | GLM-4.1V-Thinking (9B)             | 86.09 / 80.66         | 67.31 / 53.02         | 72.76 / 42.57         | 68.95 / 44.01         | 85.47 / 65.48         |
 | GUI-Owl-32B                        | 80.86 / 76.08         | 83.59 / 75.59         | 84.05 / 70.10         | 73.09 / 58.64         | 83.99 / 64.99         |
@@ -27,8 +29,7 @@ The evaluation results are reported as Type Accuracy / Step Success Rate.
 | UI-TARS-72B-DPO                    | 94.18 / 91.58         | 84.62 / 78.07         | 86.41 / 69.04         | 81.56 / 66.47         | 90.23 / 73.47         |
 | UI-Venus-Navi-72B                  | 89.81 / 85.20         | 82.35 / 73.53         | 87.61 / 72.10         | 79.15 / 65.20         | 87.13 / 69.60         |
 | GLM-4.5v (106B, 12B active)        | 86.35 / 81.37         | 71.54 / 59.15         | 75.33 / 48.90         | 70.72 / 48.52         | 87.64 / 69.26         |
-| MagicGUI-CPT                       | 88.91 / 81.19         | 78.50 / 67.39         | 88.84 / 74.70         | 65.45 / 44.90         | 72.05 / 46.15         |
-| MagicGUI-RFT                       | 95.77 / 91.78         | 81.47 / 72.76         | 85.29 / 72.78         | 64.20 / 44.50         | 78.52 / 52.81         |
+
 
 Note that:
 1. We find `qwen2.5-vl-32/72b-instruct` exhibits significant hallucinations in GUI agent tasks. Therefore, we exclude them from the evaluation.
@@ -36,6 +37,8 @@ Note that:
 3. We discard `open_app` and `answer` actions when applying GLM-V models.
 4. We discard `Launch(app='')` action when applying UI-Venus models.
 5. We remove the `OPEN_APP` step when evaluating the AndroidControl benchmark.
+
+<!--
 6. The performance of MagicGUI models shows a slight dip on AC and GUI Odyssey compared to that reproduced using the source project [MagicGUI](https://github.com/MagicAgent-GUI/MagicGUI/tree/main), which can be attributed to a discrepancy between the official matching criteria and our own.
     <table>
         <thead>
@@ -78,3 +81,4 @@ Note that:
           </tr>
         </tbody>
     </table>
+-->

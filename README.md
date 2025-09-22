@@ -12,17 +12,18 @@ This work has been tested in the following environment:
 
 ## Supported Models
 
-| Model                                                            | Model Name                                    | Organization |
-|------------------------------------------------------------------|-----------------------------------------------|--------------|
-| [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL)               | `qwen2.5-vl-3/7/32/72b-instruct`              | Alibaba      |
-| [GUI-Owl](https://github.com/X-PLUG/MobileAgent)                 | `gui-owl-7/32b`                               | Alibaba      |
-| [UI-Venus](https://github.com/inclusionAI/UI-Venus)              | `ui-venus-navi-7/72b`                         | Ant Group    |
-| [UI-TARS](https://github.com/bytedance/UI-TARS)                  | `ui-tars-2/7/72b-sft`, `ui-tars-7/72b-dpo`    | Bytedance    |
-| [UI-TARS-1.5](https://github.com/bytedance/UI-TARS)              | `ui-tars-1.5-7b`                              | Bytedance    |
-| [AgentCPM-GUI](https://github.com/OpenBMB/AgentCPM-GUI)          | `agentcpm-gui-8b`                             | ModelBest    |
-| [MiMo-VL](https://github.com/XiaomiMiMo/MiMo-VL)                 | `mimo-vl-7b-sft/rl`, `mimo-vl-7b-sft/rl-2508` | Xiaomi       |
-| [GLM-V](https://github.com/zai-org/GLM-V)                        | `glm-4.1v-9b-thinking`, `glm-4.5v`            | Zhipu AI     |
-| [MagicGUI](https://github.com/MagicAgent-GUI/MagicGUI/tree/main) | `MagicGUI-CPT`, `MagicGUI-RFT`                | Honor        |
+| Model                                                   | Model Name                                    | Organization |
+|---------------------------------------------------------|-----------------------------------------------|--------------|
+| [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL)      | `qwen2.5-vl-3/7/32/72b-instruct`              | Alibaba      |
+| [GUI-Owl](https://github.com/X-PLUG/MobileAgent)        | `gui-owl-7/32b`                               | Alibaba      |
+| [UI-Venus](https://github.com/inclusionAI/UI-Venus)     | `ui-venus-navi-7/72b`                         | Ant Group    |
+| [UI-TARS](https://github.com/bytedance/UI-TARS)         | `ui-tars-2/7/72b-sft`, `ui-tars-7/72b-dpo`    | Bytedance    |
+| [UI-TARS-1.5](https://github.com/bytedance/UI-TARS)     | `ui-tars-1.5-7b`                              | Bytedance    |
+| [MagicGUI](https://github.com/MagicAgent-GUI/MagicGUI)  | `magicgui-cpt/rft`                            | Honor        |
+| [AgentCPM-GUI](https://github.com/OpenBMB/AgentCPM-GUI) | `agentcpm-gui-8b`                             | ModelBest    |
+| [MiMo-VL](https://github.com/XiaomiMiMo/MiMo-VL)        | `mimo-vl-7b-sft/rl`, `mimo-vl-7b-sft/rl-2508` | Xiaomi       |
+| [GLM-V](https://github.com/zai-org/GLM-V)               | `glm-4.1v-9b-thinking`, `glm-4.5v`            | Zhipu AI     |
+
 
 ## Supported Benchmarks
 
