@@ -212,7 +212,7 @@ def aitw_2_magicgui_action(aitw_action):
     return ""
 
 
-def prepare_task_input(step, image_path, history_actions: list, data_name):
+def prepare_task_input(step, image_path, history_actions: list, data_name, use_vllm):
     query = step['instruction']
     if data_name == 'androidcontrol_low':
         query = step["low_instruction"]
@@ -233,7 +233,7 @@ def prepare_task_input(step, image_path, history_actions: list, data_name):
     return step, messages, images
 
 
-def prepare_task_inputs(episode, episode_dir, episode_file, subset, dataset):
+def prepare_task_inputs(episode, episode_dir, episode_file, subset, dataset, use_vllm):
 
     res = []
     files_dir = os.path.join(episode_dir, episode_file)
@@ -283,7 +283,7 @@ def prepare_task_inputs(episode, episode_dir, episode_file, subset, dataset):
                 if not os.path.exists(image_path):
                     image_path = step['image_path']
 
-        res.append(prepare_task_input(step, image_path, history, dataset))
+        res.append(prepare_task_input(step, image_path, history, dataset, use_vllm))
 
     return res
 

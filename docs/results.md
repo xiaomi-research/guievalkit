@@ -36,4 +36,45 @@ Note that:
 3. We discard `open_app` and `answer` actions when applying GLM-V models.
 4. We discard `Launch(app='')` action when applying UI-Venus models.
 5. We remove the `OPEN_APP` step when evaluating the AndroidControl benchmark.
-6. The performance of MagicGUI models shows a slight dip on AC and GUI Odyssey, which is attributed to a discrepancy between the official matching criteria and our own.
+6. The performance of MagicGUI models shows a slight dip on AC and GUI Odyssey compared to that reproduced using the source project [MagicGUI](https://github.com/MagicAgent-GUI/MagicGUI/tree/main), which can be attributed to a discrepancy between the official matching criteria and our own.
+    <table>
+        <thead>
+          <tr>
+            <th rowspan="2">Agent Models</th>
+            <th colspan="2">AC-Low</th>
+            <th colspan="2">AC-High</th>
+            <th colspan="2">GUI-Odyssey</th>
+          </tr>
+          <tr>
+            <th>Type</th><th>SR</th>
+            <th>Type</th><th>SR</th>
+            <th>Type</th><th>SR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>MagicGUI-CPT</td>
+            <td>94.5</td><td>86.7</td>
+            <td>84.6</td><td>73.1</td>
+            <td>90.4</td><td>73.5</td>
+          </tr>
+          <tr>
+            <td>MagicGUI-CPT-Reproduced</td>
+            <td>91.6</td><td>84.3</td>
+            <td>81.6</td><td>70.8</td>
+            <td>88.8</td><td>74.7</td>
+          </tr>
+          <tr>
+            <td>MagicGUI-RFT</td>
+            <td>97.2</td><td>93.5</td>
+            <td>84.7</td><td>76.3</td>
+            <td>-</td><td>-</td>
+          </tr>
+          <tr>
+            <td>MagicGUI-RFT-Reproduced</td>
+            <td>96.0</td><td>92.5</td>
+            <td>82.7</td><td>74.5</td>
+            <td>-</td><td>-</td>
+          </tr>
+        </tbody>
+    </table>

@@ -109,7 +109,7 @@ def prepare_inputs(model_name, episode, episode_dir, episode_file, subset, datas
         global_tokenizer._tokenizer.image_processor.max_pixels = run_magicgui.MAX_PIXELS
         global_tokenizer._tokenizer.image_processor.min_pixels = run_magicgui.MIN_PIXELS
         return run_magicgui.prepare_task_inputs(
-            episode, episode_dir, episode_file, subset, dataset)
+            episode, episode_dir, episode_file, subset, dataset, use_vllm)
 
 
 def run_step_batch(model_name, batch_tasks, use_vllm):

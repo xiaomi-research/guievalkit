@@ -6,9 +6,8 @@ try:
 except Exception:
     hf_attn_implementation = "sdpa"
 
-from transformers import (AutoProcessor, AutoTokenizer, AutoModelForCausalLM, Qwen2VLForConditionalGeneration,
-                          Qwen2_5_VLForConditionalGeneration, Qwen2VLForConditionalGeneration, Qwen2VLProcessor,
-                          Glm4vForConditionalGeneration, Glm4vMoeForConditionalGeneration)
+from transformers import (AutoProcessor, AutoTokenizer, AutoModelForCausalLM, Qwen2VLForConditionalGeneration, Qwen2VLProcessor,
+                          Qwen2_5_VLForConditionalGeneration, Glm4vForConditionalGeneration, Glm4vMoeForConditionalGeneration)
 
 
 def model_config_handler(model_name):
