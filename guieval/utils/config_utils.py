@@ -6,13 +6,12 @@ try:
 except Exception:
     hf_attn_implementation = "sdpa"
 
-from transformers import (AutoProcessor, AutoTokenizer, AutoModelForCausalLM, Qwen2VLForConditionalGeneration,
-                          Qwen2_5_VLForConditionalGeneration, Glm4vForConditionalGeneration,
-                          Glm4vMoeForConditionalGeneration)
+from transformers import (AutoProcessor, AutoTokenizer, AutoModelForCausalLM,
+                          Qwen2VLForConditionalGeneration, Qwen2VLProcessor, Qwen2_5_VLForConditionalGeneration,
+                          Glm4vForConditionalGeneration, Glm4vMoeForConditionalGeneration)
 
 
 def model_config_handler(model_name):
-
     if model_name == "agentcpm-gui-8b":
         LLM_CLASS = AutoModelForCausalLM
         attn_implementation = "sdpa"
@@ -37,6 +36,10 @@ def model_config_handler(model_name):
         LLM_CLASS = Glm4vMoeForConditionalGeneration
         attn_implementation = hf_attn_implementation
         TOKENIZER_CLASS = AutoProcessor
+    elif model_name in ["magicgui-cpt", "magicgui-rft"]:
+        LLM_CLASS = Qwen2VLForConditionalGeneration
+        attn_implementation = hf_attn_implementation
+        TOKENIZER_CLASS = Qwen2VLProcessor
     else:
         raise ValueError(f"Model {model_name} not found.")
 

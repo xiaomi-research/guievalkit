@@ -55,5 +55,11 @@
     },
     "ui-venus-navi-72b": {
         "folder_name": "models/UI-Venus-Navi-72B"
+    },
+    "magicgui-cpt":{
+        "folder_name": "models/MagicGUI_CPT"
+    },
+    "magicgui-rft":{
+        "folder_name": "models/MagicGUI_RFT"
     }
 }
