@@ -29,7 +29,8 @@ The evaluation results are reported as Type Accuracy / Step Success Rate.
 | UI-TARS-72B-DPO                    | 94.18 / 91.58         | 84.62 / 78.07         | 86.41 / 69.04         | 81.56 / 66.47         | 90.23 / 73.47         |
 | UI-Venus-Navi-72B                  | 89.81 / 85.20         | 82.35 / 73.53         | 87.61 / 72.10         | 79.15 / 65.20         | 87.13 / 69.60         |
 | GLM-4.5v (106B, 12B active)        | 86.35 / 81.37         | 71.54 / 59.15         | 75.33 / 48.90         | 70.72 / 48.52         | 87.64 / 69.26         |
-
+| MagicGUI-CPT                       | 88.91 / 81.19         | 78.50 / 67.39         | 88.84 / 74.70         | 65.45 / 44.90         | 72.05 / 46.15         |
+| MagicGUI-RFT                       | 95.77 / 91.78         | 81.47 / 72.76         | 85.29 / 72.78         | 64.20 / 44.50         | 78.52 / 52.81         |
 
 Note that:
 1. We find `qwen2.5-vl-32/72b-instruct` exhibits significant hallucinations in GUI agent tasks. Therefore, we exclude them from the evaluation.
@@ -37,48 +38,3 @@ Note that:
 3. We discard `open_app` and `answer` actions when applying GLM-V models.
 4. We discard `Launch(app='')` action when applying UI-Venus models.
 5. We remove the `OPEN_APP` step when evaluating the AndroidControl benchmark.
-
-<!--
-6. The performance of MagicGUI models shows a slight dip on AC and GUI Odyssey compared to that reproduced using the source project [MagicGUI](https://github.com/MagicAgent-GUI/MagicGUI/tree/main), which can be attributed to a discrepancy between the official matching criteria and our own.
-    <table>
-        <thead>
-          <tr>
-            <th rowspan="2">Agent Models</th>
-            <th colspan="2">AC-Low</th>
-            <th colspan="2">AC-High</th>
-            <th colspan="2">GUI-Odyssey</th>
-          </tr>
-          <tr>
-            <th>Type</th><th>SR</th>
-            <th>Type</th><th>SR</th>
-            <th>Type</th><th>SR</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>MagicGUI-CPT</td>
-            <td>94.5</td><td>86.7</td>
-            <td>84.6</td><td>73.1</td>
-            <td>90.4</td><td>73.5</td>
-          </tr>
-          <tr>
-            <td>MagicGUI-CPT-Reproduced</td>
-            <td>91.6</td><td>84.3</td>
-            <td>81.6</td><td>70.8</td>
-            <td>88.8</td><td>74.7</td>
-          </tr>
-          <tr>
-            <td>MagicGUI-RFT</td>
-            <td>97.2</td><td>93.5</td>
-            <td>84.7</td><td>76.3</td>
-            <td>-</td><td>-</td>
-          </tr>
-          <tr>
-            <td>MagicGUI-RFT-Reproduced</td>
-            <td>96.0</td><td>92.5</td>
-            <td>82.7</td><td>74.5</td>
-            <td>-</td><td>-</td>
-          </tr>
-        </tbody>
-    </table>
--->

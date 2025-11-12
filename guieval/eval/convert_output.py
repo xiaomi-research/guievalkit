@@ -2,37 +2,39 @@ import json
 import jsonschema
 import os
 
+from copy import deepcopy
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 
 from guieval.utils.utils import load_json_data
-
+from guieval.utils import UNIFIED_FIELDS, PREDICTION
 
 EXTRACT_SCHEMA = json.load(
-    open(os.path.join('guieval/models/utils/schema', 'schema_for_extraction.json'), encoding="utf-8"))
+    open(os.path.join('guieval/utils/schema', 'schema_for_extraction.json'), encoding="utf-8"))
 
 
-def parse_action(pred):
+def parse_action(pred: PREDICTION):
     try:
-        jsonschema.validate(pred, EXTRACT_SCHEMA)
+        tmp_pred = deepcopy(pred)
+        if 'POINT' in tmp_pred:
+            tmp_pred['POINT'] = list(tmp_pred['POINT'])
+        jsonschema.validate(tmp_pred, EXTRACT_SCHEMA)
         actions = {}
         parameters = {}
-        status = pred.get("STATUS", "continue")
-        action_keys = ["POINT", "to", "PRESS", "TYPE", "OPEN_APP", "INPUT"]
+        status = tmp_pred.get("STATUS", "continue")
 
-        for key in action_keys:
-            if key in pred:
-                actions[key] = pred[key]
+        for key in UNIFIED_FIELDS:
+            if key in tmp_pred:
+                actions[key] = tmp_pred[key]
 
-        parameters["duration"] = pred.get("duration", EXTRACT_SCHEMA["properties"]["duration"]["default"])
-        if "to" in pred:
-            parameters["to"] = pred["to"]
+        parameters["duration"] = tmp_pred.get("duration", EXTRACT_SCHEMA["properties"]["duration"]["default"])
+        if "to" in tmp_pred:
+            parameters["to"] = tmp_pred["to"]
 
         return actions, parameters, status
 
     except Exception:
-        print(f"Error, JSON is NOT valid according to the schema: {pred}")
-        return None, None, None
+        raise Exception(f"Error, JSON is NOT valid according to the schema: {pred}")
 
 
 def process_step(task, episode_id, step_id, pred, output_path):
@@ -74,7 +76,7 @@ def convert2aitz(input_path, output_path, max_workers=None):
             step_id = index if "steps" in item else each_step.get("step_id", index)
             folder = f"{task}-{episode_id}"
             folders.add(folder)
-            pred = each_step.get("pred", {})
+            pred = each_step.get("prediction", {})
             tasks.append((task, episode_id, step_id, pred, output_path))
 
     for folder in folders:

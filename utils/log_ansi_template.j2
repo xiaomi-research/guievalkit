@@ -1,0 +1,24 @@
+{%- if ansi_style -%}
+{{selected_ansi.CYAN.value}}[{{name}}]{{selected_ansi.RESET.value}} {{record.name}} - LOC: {{selected_ansi.CYAN.value}}{{selected_ansi.UNDERLINE.value}}{{record.filename}}:{{record.lineno}}{{selected_ansi.RESET.value}}{{selected_ansi.RESET.value}} - TIME {{timestamp}}
+{%- if level_colors is mapping %} - {{level_colors[record.levelname].value}}{{record.levelname}}{{selected_ansi.RESET.value}}
+{%- endif -%}:
+{% else -%}
+[{{name}}] {{record.name}} - LOC: {{record.filename}}:{{record.lineno}} - TIME {{timestamp}} - {{record.levelname}}:
+{% endif -%}
+{%- set msg = record.msg -%}
+{%- if '<split_line>' in msg -%}
+{%- set lines = msg.replace('<split_line>', '').split('\n') -%}
+{%- set ns = namespace(max_len=0) -%}
+{%- for line in lines -%}
+{%- if line|length > ns.max_len -%}
+{%- set ns.max_len = line|length -%}
+{%- endif -%}
+{%- endfor -%}
+{%- if ansi_style -%}
+{% set split_line = (ns.max_len - 3 - name|length) * '=' + ' ' + selected_ansi.CYAN.value + '[' + name + ']' + selected_ansi.RESET.value %}
+{%- else -%}
+{% set split_line = (ns.max_len - 3 - name|length) * '=' + ' ' + '[' + name + ']' %}
+{%- endif -%}
+{%- set msg = msg.replace('<split_line>', split_line) -%}
+{%- endif -%}
+{{msg}}

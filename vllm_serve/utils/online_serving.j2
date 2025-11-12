@@ -1,0 +1,12 @@
+vllm serve {{setup.model}} --served-model-name {{setup.model_alias}} \
+    {% if setup.tokenizer is not none %}--tokenizer {{setup.tokenizer}} {% endif %}--max-model-len {{setup.max_model_len}} \
+    --host {{setup.host}} --port {{setup.port}} --api-key {{setup.api_key}} \
+    --dtype {{setup.dtype}} \
+    --task {{setup.task}} \
+    --tensor-parallel-size {{setup.tensor_parallel_size}} --data-parallel-size {{setup.data_parallel_size}} --pipeline-parallel-size {{setup.pipeline_parallel_size}} \
+    --max-num-batched-tokens {{setup.max_num_batched_tokens}} \
+    --max-num-seqs {{setup.max_num_seqs}} \
+    --gpu-memory-utilization {{setup.gpu_memory_utilization}} \
+    --limit-mm-per-prompt.image {{setup.image_limit}} --limit-mm-per-prompt.video {{setup.video_limit}} \
+    {% if not setup.enable_log_stats %}--disable-log-stats {% endif%}{% if setup.enable_log_requests %}--enable-log-requests{% else %}--no-enable-log-requests{% endif %} \
+    --trust-remote-code > {{setup.log_path}}
