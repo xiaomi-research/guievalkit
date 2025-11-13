@@ -1,15 +1,16 @@
 import json
+from typing import Literal
 import numpy as np
 import os
 import Levenshtein
 
-from guieval.utils.action_type import ActionType
+from guieval.utils.action_space import ActionType
 from guieval.utils.action_utils import (get_direction, is_tap_action, obtain_gt_bbox, _get_direction,
                                         _resize_annotation_bounding_boxes)
 
 
 EXTRACT_SCHEMA = json.load(
-    open(os.path.join('guieval/models/utils/schema', 'schema_for_extraction.json'), encoding="utf-8"))
+    open(os.path.join('guieval/utils/schema', 'schema_for_extraction.json'), encoding="utf-8"))
 
 _TAP_DISTANCE_THRESHOLD = 0.14
 _TAP_DISTANCE_THRESHOLD_AC = 0.04
@@ -123,7 +124,7 @@ class ActionEvaluator(object):
             gt_cand_nodes = json.loads(gt.get('ui_positions'))
             return gt_cand_nodes
 
-        elif gt.get('bbox'):  # hypertrack only store correct bbox
+        elif gt.get('bbox'):
             gt_cand_nodes = json.loads(gt.get('bbox'))
             return gt_cand_nodes
 
@@ -353,3 +354,8 @@ class ActionEvaluator(object):
             "format_hit": hit_format,
             "pixel_distance": pixel_distance,
         }
+
+
+EVALUATOR_NAMES = Literal['androidcontrol', 'common']
+EVALUATORS: dict[EVALUATOR_NAMES, ActionEvaluator] = dict(androidcontrol=ActionEvaluator(eval_android_control=True),
+                                                          common=ActionEvaluator(eval_android_control=False))

@@ -3,7 +3,7 @@
         "folder_name": "models/AgentCPM-GUI"
     },
     "ui-tars-1.5-7b": {
-        "folder_name": "models/UI-TARS-1.5-7B"
+        "folder_name": "models/UI-TARS/UI-TARS-1.5-7B"
     },
     "ui-tars-2b-sft": {
         "folder_name": "models/UI-TARS-2B-SFT"
@@ -25,6 +25,18 @@
     },
     "qwen2.5-vl-7b-instruct": {
         "folder_name": "models/Qwen2.5-VL-7B-Instruct"
+    },
+    "qwen3-vl-4b-instruct": {
+        "folder_name": "models/Qwen3-VL-4B-Instruct"
+    },
+    "qwen3-vl-4b-thinking": {
+        "folder_name": "models/Qwen3-VL-4B-Thinking"
+    },
+    "qwen3-vl-8b-instruct": {
+        "folder_name": "models/Qwen3-VL-8B-Instruct"
+    },
+    "qwen3-vl-8b-thinking": {
+        "folder_name": "models/Qwen3-VL-8B-Thinking"
     },
     "mimo-vl-7b-sft": {
         "folder_name": "models/MiMo-VL-7B-SFT"

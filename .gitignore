@@ -48,6 +48,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+test/
 
 # Translations
 *.mo
@@ -117,10 +118,11 @@ dmypy.json
 # customize
 /data/android_control/
 /data/android_in_the_zoo/
-/data/cagui_agent/
+cagui_agent/
 /data/gui_odyssey/
-/data/hypertrack/
 /outputs
+/models
+/logs
 .idea/
 .DS_Store
 .vscode/

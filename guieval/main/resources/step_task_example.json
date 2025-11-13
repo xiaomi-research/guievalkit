@@ -1,0 +1,30 @@
+{
+    "episode_id": "3194493911651021375",
+    "episode_length": 6,
+    "step_id": 0,
+    "instruction": "What's the US dollar exchange rateagainst the Swiss Franc?",
+    "ui_positions": "[[0.08958333333333333, 0.6402777777777777, 0.027777777777777776, 0.03333333333333333], [0.09166666666666666, 0.15694444444444444, 0.03125, 0.45555555555555555], [0.09513888888888888, 0.6388888888888888, 0.022916666666666665, 0.19722222222222222], [0.7729166666666667, 0.09722222222222222, 0.03333333333333333, 0.044444444444444446], [0.7729166666666667, 0.2861111111111111, 0.03125, 0.044444444444444446], [0.7784722222222222, 0.8597222222222223, 0.01875, 0.022222222222222223], [0.8729166666666667, 0.1, 0.03333333333333333, 0.0375], [0.9583333333333334, 0.19166666666666668, 0.025694444444444443, 0.025], [0.9583333333333334, 0.48055555555555557, 0.025, 0.030555555555555555], [0.9583333333333334, 0.7708333333333334, 0.025694444444444443, 0.029166666666666667]]",
+    "ui_text": "[\"\", \"Tuesday, Oct 11\", \"&17\\u00b0C\", \"M\", \"\", \"\", \"\", \"\", \"\", \"\"]",
+    "ui_types": "[\"ICON_MOON\", \"TEXT\", \"TEXT\", \"ICON_ENVELOPE\", \"ICON_CHAT\", \"ICON_PLAY\", \"ICON_GOOGLE\", \"ICON_V_BACKWARD\", \"ICON_NAV_BAR_CIRCLE\", \"ICON_NAV_BAR_RECT\"]",
+    "result_action_type": 4,
+    "result_action_text": "",
+    "result_touch_yx": "[0.8829706907272339, 0.38733482360839844]",
+    "result_lift_yx": "[0.8829706907272339, 0.38733482360839844]",
+    "image_path": "general/GENERAL-3194493911651021375/GENERAL-3194493911651021375_0.png",
+    "image_full_path": "android-in-the-wild/aitw_with_gpt/test/general/GENERAL-3194493911651021375/GENERAL-3194493911651021375_0.png",
+    "coat_screen_desc": "This screenshot shows the home screen of a smartphone at 7:28 with a pink gradient background and the date, \"Tuesday, Oct 11,\" with a weather icon indicating a temperature of 17°C. There are five app icons at the bottom: Gmail, Messages, Google Maps, Chrome browser, and YouTube, indicating quick access to these services. Below the app icons is the Google Search bar for easy web searches. The navigation bar at the bottom includes a back arrow, home button, and a recently used apps overview button. The top status bar displays signal strength, Wi-Fi connectivity, and battery status among other indicators.",
+    "coat_action_think": "The screen shows the smartphone's home screen with commonly used apps and a Google Search bar which can be utilized to search for the exchange rate. Possible actions are to tap the Google Search bar or use the Chrome browser to find the current USD to CHF exchange rate.",
+    "coat_action_desc": "click on the search bar located at the bottom-left.",
+    "coat_action_result": "By doing so, the search bar is activated, ready for text input. This allows the user to type in the query regarding the US dollar exchange rate against the Swiss Franc to find the current information online.",
+    "image_height": 1440,
+    "image_width": 720,
+    "image_channels": 3,
+    "category": "general",
+    "pred": {
+        "POINT": [
+            550,
+            735
+        ],
+        "to": "up"
+    }
+}
