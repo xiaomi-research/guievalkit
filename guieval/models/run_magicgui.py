@@ -101,7 +101,7 @@ def magicgui_2_minicpm(output_text):
             x, y, direction = arguments
             direction_choices = {"up", "down", "left", "right"}
             direction = direction.lower()
-            if direction in direction_choices:
+            if direction not in direction_choices:
                 raise ValueError(f'Predicted direction `{direction}` not in choices')
             x1, y1 = map(float, arguments[:2])
             return {"POINT": [int(x1), int(y1)],
