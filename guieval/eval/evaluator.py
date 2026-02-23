@@ -124,7 +124,7 @@ class ActionEvaluator(object):
             gt_cand_nodes = json.loads(gt.get('ui_positions'))
             return gt_cand_nodes
 
-        elif gt.get('bbox'):
+        elif gt.get('bbox'):  # hypertrack only store correct bbox
             gt_cand_nodes = json.loads(gt.get('bbox'))
             return gt_cand_nodes
 

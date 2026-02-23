@@ -12,11 +12,10 @@ from qwen_agent.llm.fncall_prompts.nous_fncall_prompt import NousFnCallPrompt, M
 from qwen_agent.tools.base import register_tool
 from vllm import SamplingParams
 
-# subsec internal
 from guieval.main import StepTaskModel
 from guieval.utils import ActionType
 from guieval.models.utils import *
-from guieval.models.utils.abcmodel import *
+from guieval.models.abcmodel import *
 from guieval.utils.action_utils import is_tap_action, get_direction
 from guieval.models.utils.qwen2p5_vl_agent_function_call import MobileUse
 
@@ -126,6 +125,7 @@ class GUIOwl(ABCModel):
                     answer = json.loads(answer_json_block)
                 except json.JSONDecodeError:
                     answer = ParserTools.parse_json_dict_block(answer_str)
+                    # raise AttributeError if no parseable braced json block is found
             except AttributeError:
                 try:
                     function_name = re.search(r'"name".*:.*"(.*)".*"arguments"', answer_str, re.DOTALL).group(1)
@@ -151,8 +151,8 @@ class GUIOwl(ABCModel):
             return dict(action=action,
                         arguments=arguments,
                         answer=answer_str,
-                        thinking=(None if parsed_matches["thinking"] is None else
-                                  ParserTools.enhanced_strip(parsed_matches["thinking"].group(1))),
+                        thought=(None if parsed_matches["thought"] is None else
+                                  ParserTools.enhanced_strip(parsed_matches["thought"].group(1))),
                         conclusion=(None if parsed_matches["conclusion"] is None else
                                     ParserTools.enhanced_strip(parsed_matches["conclusion"].group(1))))
         except Exception:
@@ -160,7 +160,7 @@ class GUIOwl(ABCModel):
 
     def model_2_minicpm(self, output_text, width, height) -> MINICPM_ACTION:
         try:
-            parsed_response: Dict[Literal['action', 'arguments', 'thinking', 'conclusion'],
+            parsed_response: Dict[Literal['action', 'arguments', 'thought', 'conclusion'],
                                   Union[Dict, Any]] = self.parse_response(output_text)
         except Exception as err:
             logger.error(f"Error. No valid `ModelPatterns` Extraction: {err}")
@@ -306,10 +306,25 @@ class GUIOwl(ABCModel):
                     'arguments': dict()}
 
     @staticmethod
-    def model_2_contents(step_task, action, *, online: bool = False) -> HistoryContent:
-        if online and step_task.evaluation.exact_match:
-            return {'content': step_task.conclusion,  # history content required by gui owl is the action conclusion.
-                    'source': 'online'}
+    def model_2_contents(history_step_task, current_step_task, action, *,
+                         expected_content_source) -> HistoryContent:
+        if expected_content_source == "online_pos" and history_step_task.evaluate().exact_match:
+            if history_step_task.conclusion is not None:
+                return {'content': history_step_task.conclusion,
+                        # history content required by Qwen3-VL is the action conclusion.
+                        'source': 'online_pos'}
+        elif (expected_content_source == "online_neg"
+              and not history_step_task.evaluate().exact_match
+              and history_step_task.pred_action is not None):
+            return {'content': history_step_task.conclusion,
+                    'source': 'online_neg'}
+        elif ((expected_content_source == "low_instruction"
+               or current_step_task.history_content_source_choices[1] == "low_instruction")
+               # 综合在 choices 中第二项是否给出 "low_instruction" 的整体行为，等价于是否给对应选项第二最高优先级
+              and history_step_task.low_instruction):
+            return {'content': history_step_task.low_instruction,
+                    'source': 'low_instruction'}
+
         if action['action'] == 'click':
             coordinate = action['arguments'].get('coordinate')
             return {'content': f'Click {coordinate}' if coordinate else 'Click Unknown coordinate',
@@ -328,7 +343,9 @@ class GUIOwl(ABCModel):
                     'source': 'offline_rule'}
         elif action['action'] == 'terminate':
             status = action['arguments'].get('status')
-            return {'content': f'Terminate with {status}' if status else 'Terminate with Unknown status',
+            return {'content': (f'Terminate with {status}'
+                                if status else
+                                'Terminate with Unknown status'),
                     'source': 'offline_rule'}
         elif action['action'] == 'long_press':
             coordinate = action['arguments'].get('coordinate')
@@ -356,17 +373,17 @@ class GUIOwl(ABCModel):
         template = '<tool_call>\n${raw_answer}\n</tool_call>'
         template = (Template(template)
                     if not enable_think else
-                    Template('\n'.join(['<thinking>\n${thinking}\n\n</thinking>', template,
+                    Template('\n'.join(['<thinking>\n${thought}\n\n</thinking>', template,
                                         '<conclusion>\n${conclusion}\n</conclusion>'])))
-        if online and step_task.evaluation.exact_match:
-            response = template.safe_substitute(thinking=step_task.thinking,
+        if online and step_task.evaluate().exact_match:
+            response = template.safe_substitute(thought=step_task.thought,
                                                 conclusion=step_task.conclusion,
                                                 raw_answer=step_task.answer)
         else:
             raw_answer = json.dumps(dict(name="mobile_for_gui_owl",
                                          arguments=dict(action=action['action'],
                                                         **action['arguments'])), ensure_ascii=False)
-            response = template.safe_substitute(thinking='null',
+            response = template.safe_substitute(thought='null',
                                                 conclusion='null',
                                                 raw_answer=raw_answer)
 
@@ -402,8 +419,8 @@ class GUIOwl(ABCModel):
         if history_length >= 1 and step_task.dataset == 'androidcontrol_high':
             history_image_memory = (1 - image_memory)
             history_messages = [self._formulate_history_messages(step_task=_history_step_task, action=_action,
-                                                                 memorize_image=(
-                                                                     (i - history_length) >= history_image_memory),
+                                                                 memorize_image=((i - history_length) >=
+                                                                                 history_image_memory),
                                                                  enable_think=step_task.enable_think,
                                                                  online=(step_task.mode == 'semi_online'))
                                 for i, (_history_step_task, _action) in enumerate(zip(raw_input['filled_history'],
@@ -429,6 +446,12 @@ class GUIOwl(ABCModel):
             *user_messages
         ]
         images = [*history_images, *raw_input['step_images']][-image_memory:]
+
+        if step_task.fixed_thought and raw_input['fixed_thought']:
+            formulated_messages.append({
+                "role": "fixed_thought",
+                "content": [{"type": "text", "text": raw_input['fixed_thought']}]
+            })
 
         step_task.formulated_messages = formulated_messages
         step_task.history_content_srcs = raw_input['history_content_srcs']

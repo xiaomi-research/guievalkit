@@ -1,4 +1,3 @@
-# section import
 import itertools
 import json
 import re
@@ -13,7 +12,7 @@ from vllm import SamplingParams
 from guieval.main import StepTaskModel
 from guieval.utils import ActionType
 from guieval.models.utils import *
-from guieval.models.utils.abcmodel import *
+from guieval.models.abcmodel import *
 from guieval.utils.action_utils import is_tap_action, get_direction
 from guieval.models.resources.ui_tars_1_5.instruction_message_builder import build as build_instruction_message
 
@@ -31,7 +30,7 @@ MAX_PIXELS = None  # 4096 * 28 * 28
 @ModelRegistry.register()
 class UITars1_5(ABCModel):
     NAMES = ("ui-tars-1.5-7b", )
-    MODEL_PATTERNS = ModelPatterns(answer_pattern=r'Action:(.*)',
+    MODEL_PATTERNS = ModelPatterns(answer_pattern=r'(.*)',
                                    answer_flags=[re.DOTALL, ],
                                    thinking_pattern=r'.*Thought:(.*)Action',
                                    thinking_flags=[re.DOTALL, ],
@@ -61,6 +60,8 @@ class UITars1_5(ABCModel):
 
         try:
             answer_str: str = parsed_matches['answer'].group(1)
+            if 'Action:' in answer_str:
+                answer_str = answer_str.split('Action:')[1].strip()
             answer_str = ParserTools.enhanced_strip(answer_str, extra=['`', ])
             action, arg_str = re.search(r'([^\(\)]*)\((.*)\)', answer_str).groups()
             action = action.strip()
@@ -82,13 +83,13 @@ class UITars1_5(ABCModel):
         return dict(action=action,
                     arguments=arguments,
                     answer=answer_str,
-                    thinking=(None if parsed_matches["thinking"] is None else
-                              ParserTools.enhanced_strip(parsed_matches["thinking"].group(1), extra=['`', ])),
+                    thought=(None if parsed_matches["thought"] is None else
+                              ParserTools.enhanced_strip(parsed_matches["thought"].group(1), extra=['`', ])),
                     conclusion=None)
 
     def model_2_minicpm(self, output_text, width, height) -> MINICPM_ACTION:
         try:
-            parsed_response: Dict[Literal['action', 'arguments', 'thinking', 'conclusion'],
+            parsed_response: Dict[Literal['action', 'arguments', 'thought', 'conclusion'],
                                 Union[Dict, Any]] = self.parse_response(output_text)
         except Exception as err:
             logger.error(f"Error. No valid `ModelPatterns` Extraction:\n\t{err}")
@@ -206,79 +207,104 @@ class UITars1_5(ABCModel):
                     'arguments': dict()}
 
     @staticmethod
-    def _wrap_answer(answer: str, thought: str | None) -> dict:
-        content = f'Thought: {thought if thought else None}\nAction: {answer}'
-        return dict(role='assistant',
-                    content=content)
+    def _wrap_answer(answer: str, thought: str | None, enable_think: bool = True) -> dict:
+        if enable_think:
+            content = f'Thought: {thought if thought else None}\nAction: {answer}'
+        else:
+            content = f'Action: {answer}'
+        return dict(role='assistant', content=content)
 
-    def model_2_contents(self,
-                         step_task: StepTaskModel,
-                         action: MODEL_ACTION, *,
-                         online: bool = False) -> HistoryContent:
-        if online and step_task.evaluation.exact_match:
-            return {'content': dict(role='assistant', content=step_task.response),
-                    # history content required by uivenus_navi is the action/raw_answer.
-                    'source': 'online'}
+    def model_2_contents(self, history_step_task, current_step_task, action, *,
+                         expected_content_source) -> HistoryContent:
+        # history content required by ui-tars-1.5 is the original answer message
+        if expected_content_source == "online_pos" and history_step_task.evaluate().exact_match:
+            if current_step_task.fixed_thought:
+                content = self._wrap_answer(answer=history_step_task.answer,
+                                            thought=history_step_task.thought,
+                                            enable_think=history_step_task.enable_think)
+                return {'content': content,
+                        'source': 'online_pos'}
+            else:
+                return {'content': dict(role='assistant', content=history_step_task.response),
+                        # history content required by uivenus_navi is the action/raw_answer.
+                        'source': 'online_pos'}
+        elif (expected_content_source == "online_neg"
+              and not history_step_task.evaluate().exact_match
+              and history_step_task.pred_action is not None):
+            return {'content': history_step_task.response,
+                    'source': 'online_neg'}
+
         if action['action'] == 'click':
             box = action['arguments'].get('start_box')
             return {'content': self._wrap_answer(answer=(f'click(start_box=\'{box}\')'
                                                          if box else
                                                          'click unknown start_box'),
-                                                 thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'long_press':
             box = action['arguments'].get('start_box')
-            return {'content': self._wrap_answer(answer=(f'long_press(start_box=\'{box}\')' if box
-                                                         else
+            return {'content': self._wrap_answer(answer=(f'long_press(start_box=\'{box}\')'
+                                                         if box else
                                                          'long_press unknown start_box'),
-                                                 thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'scroll':
             start_box = action['arguments'].get('start_box')
             direction = action['arguments'].get('direction')
             return {'content': self._wrap_answer(answer=(f'scroll(start_box=\'{start_box}\', direction=\'{direction}\')'
-                                                         if start_box and direction else
-                                                         'scroll unknown start_box or direction'),
-                                                 thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+                                                         if start_box and direction
+                                                         else 'scroll unknown start_box or direction'),
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'type':
             content = action['arguments'].get('content')
             return {'content': self._wrap_answer(answer=(f'type(content=\'{content}\')'
                                                          if content else
                                                          'type unknown content'),
-                                                 thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'press_back':
-            return {'content': self._wrap_answer(answer=f'press_back()', thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+            return {'content': self._wrap_answer(answer=f'press_back()', thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'press_home':
-            return {'content': self._wrap_answer(answer=f'press_home()', thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+            return {'content': self._wrap_answer(answer=f'press_home()', thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'finished':
             content = action['arguments'].get('content')
             return {'content': self._wrap_answer(answer=(f'finished(content=\'{content}\')'
                                                          if content else
                                                          'finished without content'),
-                                                 thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'open_app':
             app_name = action['arguments'].get('app_name')
             return {'content': self._wrap_answer(answer=(f'open_app(app_name=\'{app_name}\')'
                                                          if app_name else
                                                          'open_app unknown app_name'),
-                                                 thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         elif action['action'] == 'drag':
             start_box = action['arguments'].get('start_box')
             end_box = action['arguments'].get('end_box')
             return {'content': self._wrap_answer(answer=(f'drag(start_box=\'{start_box}\', end_box=\'{end_box}\')'
                                                          if start_box and end_box else
                                                          'drag unknown start_box or end_box'),
-                                                 thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
         else:
-            return {'content': self._wrap_answer(answer='Unknown Action', thought=step_task.low_instruction),
-                    'source': 'offline_rule'}
+            return {'content': self._wrap_answer(answer='Unknown Action',
+                                                 thought=history_step_task.low_instruction,
+                                                 enable_think=current_step_task.enable_think),
+                    'source': 'low_instruction' if history_step_task.low_instruction else 'offline_rule'}
 
     def prepare_task_input(self, step_task: StepTaskModel, image_memory: int = 5, **kwargs) -> StepTaskModel:
         raw_input = super().prepare_task_input(step_task=step_task,
@@ -310,6 +336,12 @@ class UITars1_5(ABCModel):
                                                          enable_think=step_task.enable_think),
                                *history_messages,
                                image_message]
+
+        if step_task.fixed_thought and raw_input['fixed_thought']:
+            formulated_messages.append({
+                "role": "fixed_thought",
+                "content": [{"type": "text", "text": raw_input['fixed_thought']}]
+            })
 
         step_task.formulated_messages = formulated_messages
         step_task.history_content_srcs = selected_history_content_srcs

@@ -3,13 +3,12 @@ import numpy as np
 import re
 import logging
 
-from typing import Any, Literal, Union, Dict
 from vllm import SamplingParams
 
 from guieval.main import StepTaskModel
 from guieval.utils import ActionType
 from guieval.models.utils import *
-from guieval.models.utils.abcmodel import *
+from guieval.models.abcmodel import *
 from guieval.utils.action_utils import is_tap_action, get_direction
 from guieval.models.resources.ui_venus_navi.prompt_builder import build as build_prompt
 
@@ -80,8 +79,8 @@ class UI_Venus_Navi(ABCModel):
                         arguments=arguments,
                         answer=(None if parsed_matches['answer'] is None else
                                 parsed_matches["answer"].group(1)),
-                        thinking=(None if parsed_matches["thinking"] is None else
-                                  ParserTools.enhanced_strip(parsed_matches["thinking"].group(1))),
+                        thought=(None if parsed_matches["thought"] is None else
+                                  ParserTools.enhanced_strip(parsed_matches["thought"].group(1))),
                         conclusion=(None if parsed_matches["conclusion"] is None else
                                     ParserTools.enhanced_strip(parsed_matches["conclusion"].group(1))))
         except Exception:
@@ -89,8 +88,7 @@ class UI_Venus_Navi(ABCModel):
 
     def model_2_minicpm(self, output_text, width, height) -> MINICPM_ACTION:
         try:
-            parsed_response: Dict[Literal['action', 'arguments', 'thinking', 'conclusion'],
-                                  Union[Dict, Any]] = self.parse_response(output_text)
+            parsed_response = self.parse_response(output_text)
         except Exception as err:
             logger.debug(str(err))
             return {'action': None,
@@ -226,10 +224,17 @@ class UI_Venus_Navi(ABCModel):
                     'arguments': dict()}
 
     @staticmethod
-    def model_2_contents(step_task, action, *, online: bool = False) -> HistoryContent:
-        if online and step_task.evaluation.exact_match:
-            return {'content': step_task.answer,  # history content required by uivenus_navi is the answer content.
-                    'source': 'online'}
+    def model_2_contents(history_step_task, current_step_task, action, *,
+                         expected_content_source) -> HistoryContent:
+        if expected_content_source == "online_pos" and history_step_task.evaluate().exact_match:
+            return {'content': history_step_task.answer,  # history content required by qwen2.5vl is the answer.
+                    'source': 'online_pos'}
+        elif (expected_content_source == "online_neg"
+              and not history_step_task.evaluate().exact_match
+              and history_step_task.pred_action is not None):
+            return {'content': history_step_task.answer,
+                    'source': 'online_neg'}
+
         if action['action'] == 'Click':
             box = action['arguments'].get('box')
             return {'content': f'Click(box={box})' if box else 'Click Unknown Box',
@@ -291,17 +296,17 @@ class UI_Venus_Navi(ABCModel):
     def prepare_task_input(self, step_task: StepTaskModel, **kwargs):
         raw_input = super().prepare_task_input(step_task=step_task)
 
-        history_thoughts = [(_history_step_task.thinking
-                             if (step_task.mode == 'semi_online' and
-                                 _history_step_task.evaluation.exact_match and
-                                 _history_step_task.thinking is not None) else
+        history_thoughts = [(_history_step_task.thought
+                             if (step_task.mode == 'semi_online'
+                                 and _history_step_task.evaluate().exact_match
+                                 and _history_step_task.thought is not None) else
                              "")
                             for _history_step_task in raw_input['filled_history']]
         history_entries = [
             (
-                f"Step {i}: <think>{thinking}</think>"
+                f"Step {i}: <think>{thought}</think>"
                 f"<action>{content}</action>")
-            for i, (thinking, content) in enumerate(zip(history_thoughts, raw_input['history_contents']))
+            for i, (thought, content) in enumerate(zip(history_thoughts, raw_input['history_contents']))
         ]
         history_str = "\n".join(history_entries)
 
@@ -310,7 +315,8 @@ class UI_Venus_Navi(ABCModel):
                                enable_think=step_task.enable_think)
 
         step_task.history_content_srcs = raw_input['history_content_srcs']
-        step_task.formulated_messages = [
+
+        formulated_messages = [
                 {"role": "system", "content": "You are a helpful assistant."},
                 {
                     "role": "user",
@@ -325,6 +331,13 @@ class UI_Venus_Navi(ABCModel):
                     ],
                 },
         ]
+        if step_task.fixed_thought and raw_input['fixed_thought']:
+            formulated_messages.append({
+                "role": "fixed_thought",
+                "content": [{"type": "text", "text": raw_input['fixed_thought']}]
+            })
+
+        step_task.formulated_messages = formulated_messages
         step_task.images = raw_input['step_images']
 
         return step_task

@@ -1,19 +1,21 @@
 import enum
 
-from typing import Literal, TypedDict
-from typing_extensions import NotRequired
+from typing import Literal
+from typing_extensions import NotRequired, TypedDict
+
 
 UNIFIED_ACTION = Literal['CLICK', 'TYPE', 'SCROLL', 'PRESS', 'STOP', 'LONG_POINT', 'OPEN', 'WAIT']
 UNIFIED_ACTIONS: set[UNIFIED_ACTION] = {'CLICK', 'TYPE', 'SCROLL', 'PRESS', 'STOP', 'LONG_POINT', 'OPEN', 'WAIT'}
 
-UNIFIED_FIELD = Literal["POINT", "to", "PRESS", "TYPE", "OPEN_APP", "INPUT", "duration"]
-UNIFIED_FIELDS: set[UNIFIED_FIELD] = {"POINT", "to", "PRESS", "TYPE", "OPEN_APP", "INPUT", "duration"}
+UNIFIED_FIELD = Literal["POINT", "to", "PRESS", "TYPE", "OPEN_APP", "duration"]
+UNIFIED_FIELDS: set[UNIFIED_FIELD] = {"POINT", "to", "PRESS", "TYPE", "OPEN_APP", "duration"}
 
 POINT = tuple[int | float, int | float]
-DIRECTION = Literal["down", "up", "right", "left"]
+DIRECTION = Literal["down", "up", "right", "left"] | str | None
 DIRECTION_CHOICES: set[DIRECTION] = {"down", "up", "right", "left"}
 DURATION = int | float
-BUTTON = Literal["BACK", "HOME", "ENTER"]
+BUTTON = Literal["BACK", "HOME", "ENTER"] | str
+STATUS = Literal["finish"] | str
 
 
 class PREDICTION(TypedDict):
@@ -21,9 +23,37 @@ class PREDICTION(TypedDict):
     to: NotRequired[DIRECTION]
     duration: NotRequired[DURATION]
     PRESS: NotRequired[BUTTON]
-    TYPE: NotRequired[str]
-    OPEN_APP: NotRequired[str]
-    INPUT: NotRequired[str]
+    TYPE: NotRequired[str | None]
+    OPEN_APP: NotRequired[str | None]
+    STATUS: NotRequired[STATUS]
+
+
+class PREDICTIONS:
+    class CLICK(TypedDict):
+        POINT: NotRequired[POINT]
+
+    class TYPE(TypedDict):
+        TYPE: NotRequired[str]
+
+    class SCROLL(TypedDict):
+        POINT: NotRequired[POINT]
+        to: NotRequired[DIRECTION]
+
+    class PRESS(TypedDict):
+        PRESS: NotRequired[BUTTON]
+
+    class STOP(TypedDict):
+        STATUS: NotRequired[STATUS]
+
+    class LONG_POINT(TypedDict):
+        POINT: NotRequired[POINT]
+        duration: NotRequired[DURATION]
+
+    class OPEN(TypedDict):
+        OPEN_APP: NotRequired[str]
+
+    class WAIT(TypedDict):
+        duration: NotRequired[DURATION]
 
 
 class ActionType(enum.IntEnum):
@@ -65,7 +95,7 @@ class ActionType(enum.IntEnum):
     @classmethod
     def action_map(cls, arguments: dict) -> UNIFIED_ACTION | None:
         if "STATUS" in arguments:
-            return None
+            return "STOP" if arguments["STATUS"] == 'finish' else None
 
         elif "TYPE" in arguments:
             return "TYPE"

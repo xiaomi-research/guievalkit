@@ -1,8 +1,10 @@
-from typing import Dict, Type, Any
+import json
+from typing import Dict, Any, Sequence
 import threading
-from typing import Type, Sequence
+from typing import Type
 
-from guieval.models.utils.abcmodel import ABCModel
+# subsec internal
+from guieval.models.abcmodel.abcmodel import ABCModel
 
 
 class ModelRegistry:
@@ -34,6 +36,26 @@ class ModelRegistry:
             return model_cls
 
         return wrapper
+
+    @classmethod
+    def keys(cls):
+        return cls._models.keys()
+
+    @classmethod
+    def values(cls):
+        return cls._models.values()
+
+    @classmethod
+    def items(cls):
+        return cls._models.items()
+
+    @classmethod
+    def dump_registry(cls) -> str:
+        repr_dict = dict(
+            (_model, _core.__qualname__)
+            for _model, _core in cls._models.items()
+        )
+        return 'registry: dict[model_name, model_core] =\n' + json.dumps(repr_dict, ensure_ascii=False, indent=4)
 
     @classmethod
     def unregister(cls, alias: str | Sequence[str] | None = None):
