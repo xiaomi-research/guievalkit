@@ -6,8 +6,6 @@ The evaluation results are reported as Type Accuracy / Step Success Rate.
 |------------------------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|
 | UI-TARS-2B-SFT                     | 97.82 / 93.60         | 82.29 / 74.20         | 85.97 / 62.86         | 79.93 / 62.40         | 86.05 / 64.44         |
 | Qwen2.5-VL-3B                      | 93.16 / 84.00         | 76.64 / 62.62         | 61.94 / 45.99         | 76.10 / 60.61         | 83.55 / 59.06         |
-| Qwen3-VL-4B-Instruct               | xx.xx / xx.xx         | 71.35 / 58.58         | 77.93 / 50.27         | xx.xx / xx.xx         | 82.76 / 62.54         |
-| Qwen3-VL-4B-Thinking               | xx.xx / xx.xx         | 70.04 / 57.02         | 71.49 / 43.11         | xx.xx / xx.xx         | 77.49 / 55.47         |
 | Qwen2.5-VL-7B                      | 94.61 / 85.05         | 73.46 / 61.40         | 61.89 / 47.92         | 78.58 / 64.73         | 77.81 / 58.48         |
 | UI-TARS-7B-SFT                     | 98.08 / 94.81         | 85.00 / 77.99         | 86.94 / 68.82         | 82.92 / 67.34         | 89.99 / 70.62         |
 | UI-TARS-7B-DPO                     | 91.23 / 87.97         | 80.59 / 73.44         | 85.42 / 68.32         | 82.01 / 65.33         | 90.26 / 70.22         |
@@ -24,8 +22,6 @@ The evaluation results are reported as Type Accuracy / Step Success Rate.
 | MagicGUI-CPT (7B)                  | 88.91 / 81.19         | 78.50 / 67.39         | 88.84 / 74.70         | 65.45 / 44.90         | 72.05 / 46.15         |
 | MagicGUI-RFT (7B)                  | 95.77 / 91.78         | 81.47 / 72.76         | 85.29 / 72.78         | 64.20 / 44.50         | 78.52 / 52.81         |
 | AgentCPM-GUI-8B                    | 92.80 / 88.60         | 76.40 / 67.93         | **90.82** / **74.84** | **85.46** / **76.08** | **96.88** / **91.32** |
-| Qwen3-VL-8B-Instruct               | xx.xx / xx.xx         | 71.75 / 59.92         | 78.13 / 52.00         | xx.xx / xx.xx         | 83.74 / 63.77         |
-| Qwen3-VL-8B-Thinking               | xx.xx / xx.xx         | 71.05 / 57.65         | 74.23 / 47.30         | xx.xx / xx.xx         | 78.71 / 56.78         |
 | GLM-4.1V-Thinking (9B)             | 86.09 / 80.66         | 67.31 / 53.02         | 72.76 / 42.57         | 68.95 / 44.01         | 85.47 / 65.48         |
 | GUI-Owl-32B                        | 80.86 / 76.08         | 83.59 / 75.59         | 84.05 / 70.10         | 73.09 / 58.64         | 83.99 / 64.99         |
 | GUI-Owl-32B (w/o thinking)         | 86.82 / 82.54         | 83.81 / 76.05         | 86.26 / 73.38         | 75.11 / 61.77         | 85.78 / 66.36         |
@@ -33,8 +29,7 @@ The evaluation results are reported as Type Accuracy / Step Success Rate.
 | UI-TARS-72B-DPO                    | 94.18 / 91.58         | 84.62 / 78.07         | 86.41 / 69.04         | 81.56 / 66.47         | 90.23 / 73.47         |
 | UI-Venus-Navi-72B                  | 89.81 / 85.20         | 82.35 / 73.53         | 87.61 / 72.10         | 79.15 / 65.20         | 87.13 / 69.60         |
 | GLM-4.5v (106B, 12B active)        | 86.35 / 81.37         | 71.54 / 59.15         | 75.33 / 48.90         | 70.72 / 48.52         | 87.64 / 69.26         |
-| MagicGUI-CPT                       | 88.91 / 81.19         | 78.50 / 67.39         | 88.84 / 74.70         | 65.45 / 44.90         | 72.05 / 46.15         |
-| MagicGUI-RFT                       | 95.77 / 91.78         | 81.47 / 72.76         | 85.29 / 72.78         | 64.20 / 44.50         | 78.52 / 52.81         |
+
 
 Note that:
 1. We find `qwen2.5-vl-32/72b-instruct` exhibits significant hallucinations in GUI agent tasks. Therefore, we exclude them from the evaluation.
@@ -42,3 +37,48 @@ Note that:
 3. We discard `open_app` and `answer` actions when applying GLM-V models.
 4. We discard `Launch(app='')` action when applying UI-Venus models.
 5. We remove the `OPEN_APP` step when evaluating the AndroidControl benchmark.
+
+<!--
+6. The performance of MagicGUI models shows a slight dip on AC and GUI Odyssey compared to that reproduced using the source project [MagicGUI](https://github.com/MagicAgent-GUI/MagicGUI/tree/main), which can be attributed to a discrepancy between the official matching criteria and our own.
+    <table>
+        <thead>
+          <tr>
+            <th rowspan="2">Agent Models</th>
+            <th colspan="2">AC-Low</th>
+            <th colspan="2">AC-High</th>
+            <th colspan="2">GUI-Odyssey</th>
+          </tr>
+          <tr>
+            <th>Type</th><th>SR</th>
+            <th>Type</th><th>SR</th>
+            <th>Type</th><th>SR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>MagicGUI-CPT</td>
+            <td>94.5</td><td>86.7</td>
+            <td>84.6</td><td>73.1</td>
+            <td>90.4</td><td>73.5</td>
+          </tr>
+          <tr>
+            <td>MagicGUI-CPT-Reproduced</td>
+            <td>91.6</td><td>84.3</td>
+            <td>81.6</td><td>70.8</td>
+            <td>88.8</td><td>74.7</td>
+          </tr>
+          <tr>
+            <td>MagicGUI-RFT</td>
+            <td>97.2</td><td>93.5</td>
+            <td>84.7</td><td>76.3</td>
+            <td>-</td><td>-</td>
+          </tr>
+          <tr>
+            <td>MagicGUI-RFT-Reproduced</td>
+            <td>96.0</td><td>92.5</td>
+            <td>82.7</td><td>74.5</td>
+            <td>-</td><td>-</td>
+          </tr>
+        </tbody>
+    </table>
+-->
