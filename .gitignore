@@ -124,6 +124,3 @@ dmypy.json
 .idea/
 .DS_Store
 .vscode/
-
-.gemini/
-gha-creds-*.json
