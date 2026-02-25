@@ -7,11 +7,10 @@ import json
 from typing import Any, Literal, Union, Dict
 from vllm import SamplingParams
 
-# subsec internal
 from guieval.main import StepTaskModel
 from guieval.utils import ActionType
 from guieval.models.utils import *
-from guieval.models.utils.abcmodel import *
+from guieval.models.abcmodel import *
 from guieval.utils.action_utils import is_tap_action, get_direction
 from guieval.models.resources.mimo_vl.prompt_builder import build as build_prompt
 
@@ -184,15 +183,13 @@ class MiMo_VL(ABCModel):
             return {'action': None,
                     'arguments': dict()}
 
-    def model_2_contents(self,
-                         step_task: StepTaskModel,
-                         action: MODEL_ACTION, *,
-                         online: bool = False) -> HistoryContent:
+    def model_2_contents(self, step_task: StepTaskModel,
+                         action: MODEL_ACTION, *, online=False) -> HistoryContent:
         # history content required by ui-tars-1.5 is the original answer message
-        if online and step_task.evaluation.exact_match:
+        if online and step_task.evaluate().exact_match:
             answer = step_task.response.split('</think>')[-1]
             return {'content': answer.strip(),
-                    'source': 'online'}
+                    'source': 'online_pos'}
         else:
             return {'content': str(action),
                     'source': 'offline_rule'}
@@ -220,8 +217,10 @@ class MiMo_VL(ABCModel):
             {"type": "image", "image": step_task.image_abspaths[0]},
             {"type": "text", "text": prompt}
         ]
+
         if not step_task.enable_think:
             content.append({"type": "text", "text": " /no_think"})
+
         messages.append(
             {
                 "role": "user",

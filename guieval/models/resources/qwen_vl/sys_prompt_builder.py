@@ -9,5 +9,6 @@ _SYS_PROMPT_TEMPLATE: jinja2.Template = jinja2.Template(_PROMPT_TEMPLATE_PATH.re
 
 def build(enable_conclude: bool = True, enable_think: bool = True, *,
           height: int | None = None, width: int | None = None) -> str:
-    return _SYS_PROMPT_TEMPLATE.render(enable_conclude=enable_conclude, enable_think=enable_think,
+    return _SYS_PROMPT_TEMPLATE.render(enable_conclude=enable_conclude,
+                                       enable_think=enable_think,
                                        height=height, width=width)

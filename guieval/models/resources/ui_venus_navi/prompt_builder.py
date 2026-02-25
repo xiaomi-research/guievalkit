@@ -1,5 +1,6 @@
 import jinja2
 
+# subsec internal
 from guieval.models.resources.loc import MODEL_RES_BASE
 
 _PROMPT_TEMPLATE_PATH = (MODEL_RES_BASE / 'ui_venus_navi' / 'prompt_template.j2')

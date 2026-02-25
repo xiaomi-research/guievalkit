@@ -1,6 +1,7 @@
-from guieval.config import EvalTaskConfig
+from guieval.main.config import EvalTaskConfig, DATASET
 
 
 __all__ = [
-    'EvalTaskConfig'
+    'EvalTaskConfig',
+    'DATASET'
 ]
