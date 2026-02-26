@@ -10,7 +10,8 @@ from vllm_serve import ModelSetup
 DATASET = Literal["androidcontrol_low",
                   "androidcontrol_high",
                   "cagui_agent",
-                  "gui_odyssey"]
+                  "gui_odyssey",
+                  "aitz"]
 
 
 class EvalTaskConfig(BaseModel):
