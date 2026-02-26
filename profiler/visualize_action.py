@@ -332,9 +332,11 @@ class Visualizer:
                   dot_ratio: float = 0.03,
                   box_ratio: float = 0.03,
                   arrow_ratio: float = 0.7,
-                  icon_ratio: float = 0.14) -> Image.Image | None:
+                  icon_ratio: float = 0.14,
+                  copy: bool = True) -> Image.Image | None:
         try:
-            return cls.METHOD_MAP[action](screen, prediction,
+            target_screen = screen.copy() if copy else screen
+            return cls.METHOD_MAP[action](target_screen, prediction,
                                           dot_ratio=dot_ratio,
                                           box_ratio=box_ratio,
                                           arrow_ratio=arrow_ratio,

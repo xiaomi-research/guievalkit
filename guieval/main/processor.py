@@ -80,5 +80,17 @@ class ModelProcessor(ModelRegistry):
     def fill_fixed_thoughts(self, task: StepTaskModel):
         self._processor._fixed_thoughts[task.episode_id][task.step_id] = task
 
+    def clear_memory(self):
+        """Clear all memory and fixed thoughts from the processor."""
+        self._processor._memory.clear()
+        self._processor._fixed_thoughts.clear()
+
+    def clear_episode_memory(self, episode_id: int | str):
+        """Clear memory associated with a specific episode."""
+        if episode_id in self._processor._memory:
+            del self._processor._memory[episode_id]
+        if episode_id in self._processor._fixed_thoughts:
+            del self._processor._fixed_thoughts[episode_id]
+
 
 __all__ = ['ModelProcessor', ]

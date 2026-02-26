@@ -1,0 +1,10 @@
+data/
+logs/
+prediction/
+.venv/
+__pycache__/
+*.png
+*.jpg
+*.jpeg
+*.jsonl
+*.log

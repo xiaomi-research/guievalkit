@@ -13,8 +13,8 @@ from utils import init_logging, Timer
 from guieval import EvalTaskConfig
 
 TASK = Annotated[
-    Literal["all", "infer", "eval"],
-    "Task phase: all=full pipeline, infer=inference only, eval=evaluate saved results"
+    Literal["all", "infer", "eval", "visualize"],
+    "Task phase: all=full pipeline, infer=inference only, eval=evaluate saved results, visualize=visualize predictions"
 ]
 
 
@@ -24,7 +24,7 @@ def main(task: TASK, setup: EvalTaskConfig):
         root_name='GUIEval',
         level='INFO',
         log_file=setup.log_file,
-        always_ansi=False
+        always_ansi=True # Enable ANSI by default for CLI visibility
     )
     logger = logging.getLogger(__name__)
     timer = Timer()
@@ -178,22 +178,28 @@ def main(task: TASK, setup: EvalTaskConfig):
                         for _f in as_completed(step_i_task_futures):
                             try:
                                 task_results: list[StepTaskModel] = _f.result()
-                            except Exception as e:
-                                logger.error(f"Processor Error: {repr(e)}\n"
-                                             f"Trackback:\n{get_simplified_traceback()}")
-                            else:
                                 for step in task_results:
                                     try:
                                         main_io[step.dataset].write(step.model_dump_json() + "\n")
-                                        main_io[step.dataset].flush()
+                                        # Clear episode memory if this was the last step to save RAM
+                                        if step.step_id == step.episode_length - 1:
+                                            processor.clear_episode_memory(step.episode_id)
                                     except Exception as io_error:
                                         logger.error(f'IO broken: {repr(io_error)}\n'
                                                      f'Trackback:\n'
                                                      f'{get_simplified_traceback()}')
+                            except Exception as e:
+                                logger.error(f"Processor Error: {repr(e)}\n"
+                                             f"Trackback:\n{get_simplified_traceback()}")
+                            
                             pbar.set_postfix_str(f"Elapsed: {timer.elapsed}")
                             pbar.update(min(setup.batch_size, next_step_task_count - pbar.n))
 
-                    step_task_count = next_step_task_count
+                # Flush once per step level to ensure data safety without killing performance
+                for _io in main_io.values():
+                    _io.flush()
+
+                step_task_count = next_step_task_count
 
             DeployedModel.deprecate_worker(alias=setup.model.model_alias)
 
@@ -203,6 +209,43 @@ def main(task: TASK, setup: EvalTaskConfig):
         compute_saved_results(setup=setup, flush=True, write=True)
 
         logger.info(f"Task elapsed: {timer.elapsed}")
+
+    if task == "visualize":
+        logger.info("Starting visualization task...")
+        from profiler.tools.result_tools import load_results
+        from profiler.visualize_action import Visualizer
+        import os
+        from PIL import Image
+
+        loaded_results = load_results(prediction_output_dir=setup.prediction_output_dir)
+        vis_output_dir = os.path.join(setup.prediction_output_dir, "visualizations")
+        os.makedirs(vis_output_dir, exist_ok=True)
+
+        logger.info(f"Found {len(loaded_results)} results. Visualizing to {vis_output_dir}...")
+        for res in tqdm(loaded_results):
+            if res.prediction and res.image_abspaths:
+                try:
+                    # Use the first image for visualization
+                    img_path = res.image_abspaths[0]
+                    img = Image.open(img_path)
+                    
+                    action_type = res.pred_action
+                    if not action_type:
+                         from guieval.utils.action_space import ActionType
+                         action_type = ActionType.action_map(res.prediction)
+
+                    if action_type:
+                        vis_img = Visualizer.visualize(img, action_type, res.prediction)
+                        if vis_img:
+                            # Create a safe filename
+                            safe_id = str(res.episode_id).replace("/", "_")
+                            save_path = os.path.join(vis_output_dir, f"{res.dataset}_{safe_id}_{res.step_id}.png")
+                            vis_img.save(save_path)
+                except Exception as e:
+                    logger.warning(f"Failed to visualize {res.episode_id} step {res.step_id}: {e}")
+
+        logger.info(f"Visualization complete. Results saved in {vis_output_dir}")
+        return
 
     if task == "eval":
         raise NotImplementedError()

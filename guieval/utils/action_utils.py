@@ -11,41 +11,24 @@ def is_tap_action(normalized_start_yx, normalized_end_yx):
 
 
 def _get_direction(point1, point2):
-
+    """
+    Calculate the cardinal direction from point1 to point2.
+    Uses magnitude comparison for efficiency.
+    """
     try:
-        x1, y1 = point1["x"], point1["y"]
-        x2, y2 = point2["x"], point2["y"]
-        assert x1 is not None
-        assert x2 is not None
-        assert y1 is not None
-        assert y2 is not None
-        vx, vy = (x2 - x1, y2 - y1)
-    except Exception:
+        vx = point2["x"] - point1["x"]
+        vy = point2["y"] - point1["y"]
+    except (KeyError, TypeError):
         return "no direction"
 
-    directions = {
-        "up": (0, -1),
-        "down": (0, 1),
-        "left": (-1, 0),
-        "right": (1, 0)
-    }
-
-    vector_length = math.sqrt(vx ** 2 + vy ** 2)
-    if vector_length == 0:
+    if vx == 0 and vy == 0:
         return "no direction"
-    unit_vector = (vx / vector_length, vy / vector_length)
 
-    max_cosine = -float('inf')
-    closest_direction = None
-    for direction, dir_vector in directions.items():
-        dx, dy = dir_vector
-        dir_length = math.sqrt(dx ** 2 + dy ** 2)
-        cos_theta = (unit_vector[0] * dx + unit_vector[1] * dy) / dir_length
-        if cos_theta > max_cosine:
-            max_cosine = cos_theta
-            closest_direction = direction
-
-    return closest_direction
+    # Compare magnitude of change to determine primary axis
+    if abs(vx) > abs(vy):
+        return "right" if vx > 0 else "left"
+    else:
+        return "down" if vy > 0 else "up"
 
 
 def get_direction(point, to):
@@ -86,38 +69,44 @@ def _resize_annotation_bounding_boxes(annotation_position, width_factor=1.2, hei
 
 
 def check_inside(x, y, bbox_list):
-    bbox_array = np.array(bbox_list)
-    y_min, x_min, height, width = bbox_array[:, 0], bbox_array[:, 1], bbox_array[:, 2], bbox_array[:, 3]
-    y_max, x_max = y_min + height, x_min + width
-
-    within_x = (x_min <= x) & (x <= x_max)
-    within_y = (y_min <= y) & (y <= y_max)
-    within_bbox = within_x & within_y
-
-    if np.any(within_bbox):
-        within_bbox_coords = bbox_array[within_bbox]
-        return True, within_bbox_coords
-    else:
+    """
+    Check if point (x, y) is inside any bounding box in bbox_list.
+    Optimized with vectorized NumPy operations.
+    """
+    if not bbox_list:
         return False, None
+        
+    bbox_array = np.asarray(bbox_list)
+    # bbox format: [y_min, x_min, height, width]
+    y_min, x_min = bbox_array[:, 0], bbox_array[:, 1]
+    y_max, x_max = y_min + bbox_array[:, 2], x_min + bbox_array[:, 3]
+
+    mask = (x >= x_min) & (x <= x_max) & (y >= y_min) & (y <= y_max)
+    
+    if np.any(mask):
+        return True, bbox_array[mask]
+    return False, None
 
 
 def obtain_gt_bbox(coordinate, bbox_list, eval_android_control=False):
-    x, y = coordinate['x'], coordinate['y']
-    if len(bbox_list) == 0:
+    """
+    Retrieve ground truth bounding boxes relevant to the given coordinate.
+    """
+    if not bbox_list:
         return []
+        
+    x, y = coordinate['x'], coordinate['y']
 
     if not eval_android_control:
         is_inside, bbox_inside = check_inside(x, y, bbox_list)
-        if is_inside:
-            return bbox_inside.tolist()
-        else:
-            return []
-    else:
-        def get_center_distance(box):
-            ymin, xmin, h, w = box
-            center_y = ymin + h / 2
-            center_x = xmin + w / 2
-            return ((center_y - y) ** 2 + (center_x - x) ** 2) ** 0.5
-
-        sorted_boxes = sorted(bbox_list, key=get_center_distance)
-        return sorted_boxes[:5]
+        return bbox_inside.tolist() if is_inside else []
+    
+    # For Android Control, return top 5 closest boxes by center distance
+    bbox_array = np.asarray(bbox_list)
+    centers_y = bbox_array[:, 0] + bbox_array[:, 2] / 2
+    centers_x = bbox_array[:, 1] + bbox_array[:, 3] / 2
+    
+    distances_sq = (centers_y - y)**2 + (centers_x - x)**2
+    closest_indices = np.argsort(distances_sq)[:5]
+    
+    return bbox_array[closest_indices].tolist()

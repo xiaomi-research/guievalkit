@@ -423,54 +423,52 @@ class ABCModel(ABC):
 
         predict_str: list[list[str]]
 
-        for step_task, resps in zip(task_batch, predict_str):
-            sizes = set(_image.size for _image in step_task.images)
-            if len(sizes) > 1:
-                self._logger.warning(f'The size of the loaded images for step {step_task.step_id} '
-                                     f'episode {step_task.episode_id} is not the same.\n'
-                                     f'Received sizes: {sizes}\n'
-                                     'Currently take the size of the last image in '
-                                     'the history image seq as the size of the images for this step. '
-                                     'This may cause some errors in the postprocessing for evaluation.')
-            width, height = step_task.images[-1].size
+        from concurrent.futures import ThreadPoolExecutor
 
-            for resp in resps:
-                try:
-                    parsed_res: ParsedResponse = self.parse_response(resp=resp)
-                    minicpm = self.model_2_minicpm(resp, width, height)
-                    evaluation = step_task.evaluate(prediction=minicpm['arguments'],
-                                                    use_cache=False)
-                    result_sample: StepTaskResultSample = {
-                        'response': resp,
-                        'answer': parsed_res['answer'],
-                        'thought': (parsed_res['thought'] if not step_task.fixed_thought else step_task.thought),
-                        'conclusion': parsed_res['conclusion'],
-                        'action': minicpm.get('action'),
-                        'prediction': minicpm.get('arguments'),
-                        'evaluation': evaluation.model_dump()
-                    }
+        def process_single_response(step_task: StepTaskModel, resp: str, width: int, height: int):
+            try:
+                parsed_res: ParsedResponse = self.parse_response(resp=resp)
+                minicpm = self.model_2_minicpm(resp, width, height)
+                evaluation = step_task.evaluate(prediction=minicpm['arguments'],
+                                                use_cache=False)
+                result_sample: StepTaskResultSample = {
+                    'response': resp,
+                    'answer': parsed_res['answer'],
+                    'thought': (parsed_res['thought'] if not step_task.fixed_thought else step_task.thought),
+                    'conclusion': parsed_res['conclusion'],
+                    'action': minicpm.get('action'),
+                    'prediction': minicpm.get('arguments'),
+                    'evaluation': evaluation.model_dump()
+                }
 
-                    if evaluation.exact_match:  # cache the postive result sample
-                        step_task.assign_step_task_result(result=result_sample)
-                except Exception as err:
-                    self._logger.error(f"Error occurred during processing sample"
-                                       f" step {step_task.step_id} episode {step_task.episode_id}:\n"
-                                f"\t{repr(err)}.\n"
-                                f"Trackback: {get_simplified_traceback()}\n"
-                                f"Prediction default Empty.")
-                    result_sample: StepTaskResultSample = {
-                        'response': resp,
-                        'answer': None,
-                        'thought': (step_task.thought if step_task.fixed_thought else None),
-                        'conclusion': None,
-                        'action': None,
-                        'prediction': dict(),
-                        'evaluation': EvaluateResult().model_dump()
-                    }
+                if evaluation.exact_match:  # cache the postive result sample
+                    step_task.assign_step_task_result(result=result_sample)
+                return result_sample
+            except Exception as err:
+                self._logger.error(f"Error occurred during processing sample"
+                                   f" step {step_task.step_id} episode {step_task.episode_id}:\n"
+                                   f"\t{repr(err)}.\n"
+                                   f"Trackback: {get_simplified_traceback()}\n"
+                                   f"Prediction default Empty.")
+                return {
+                    'response': resp,
+                    'answer': None,
+                    'thought': (step_task.thought if step_task.fixed_thought else None),
+                    'conclusion': None,
+                    'action': None,
+                    'prediction': dict(),
+                    'evaluation': EvaluateResult().model_dump()
+                }
 
-                step_task.result_samples.append(result_sample)
+        with ThreadPoolExecutor(max_workers=min(32, sum(len(r) for r in predict_str) + 1)) as executor:
+            for step_task, resps in zip(task_batch, predict_str):
+                width, height = step_task.images[-1].size
+                futures = [executor.submit(process_single_response, step_task, resp, width, height)
+                          for resp in resps]
+                
+                for f in futures:
+                    step_task.result_samples.append(f.result())
 
-            else:
                 if step_task.pred_action is None:
                     parsable_result_samples = list(filter(lambda result: result['action'] is not None,
                                                           step_task.result_samples))
@@ -479,10 +477,10 @@ class ABCModel(ABC):
                     else:
                         step_task.assign_step_task_result(result=random.choice(step_task.result_samples))
 
-            step_task.evaluate()  # force evaluation
+                step_task.evaluate()  # force evaluation
 
-            if not step_task.fixed_memory:
-                self._memory[step_task.episode_id][step_task.step_id] = step_task
+                if not step_task.fixed_memory:
+                    self._memory[step_task.episode_id][step_task.step_id] = step_task
 
         return task_batch
 

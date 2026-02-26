@@ -79,7 +79,7 @@ def load_episode(dataset: str, split: Literal['test'], subset: str, subset_dir: 
                 _step_task['step_id'] = _i  # align all step id to 0-start index i in episode <save>
         except Exception as e:
             raise ValueError(f"Failed to load {episode_json}: {e}")
-    return list(map(StepTaskModel.model_validate, episode_data))
+    return [StepTaskModel.model_validate(_step_task) for _step_task in episode_data]
 
 
 # section load_data

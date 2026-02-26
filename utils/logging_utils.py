@@ -49,45 +49,47 @@ class _Level_Color_Dict(dict):
 
 
 class ProjectFormatter(logging.Formatter):
-    LEVEL_COLORS: dict[LOGGING_LEVEL, ANSI_CODE] = _Level_Color_Dict({
-        'DEBUG': ANSI_CODE.GREEN_BG,
-        'INFO': ANSI_CODE.BLUE_BG,
-        'WARNING': ANSI_CODE.YELLOW_BG,
-        'ERROR': ANSI_CODE.MAGENTA_BG,
-        'CRITICAL': ANSI_CODE.RED_BG
-    })
-    LOG_TEMPLATE: jinja2.Template = jinja2.Template(LOG_TEMPLATE_FILE.read_text())
+    LEVEL_COLORS: dict[str, str] = {
+        'DEBUG': ANSI_CODE.GREEN_BG.value,
+        'INFO': ANSI_CODE.BLUE_BG.value,
+        'WARNING': ANSI_CODE.YELLOW_BG.value,
+        'ERROR': ANSI_CODE.MAGENTA_BG.value,
+        'CRITICAL': ANSI_CODE.RED_BG.value
+    }
 
     def __init__(self,
                  name: str,
                  ansi_style: bool = True,
                  concise_time: bool = False) -> None:
         super().__init__()
-        self.name = name
+        self.project_name = name
         self.ansi_style = ansi_style
         self.concise_time = concise_time
 
     def format(self, record: logging.LogRecord) -> str:
-        now = time.time_ns() * 1e-9
-        structed_time = time.localtime(now)
+        # Get timestamp
+        ct = self.converter(record.created)
         if self.concise_time:
-            mini_time_res = f'{now:.03f}'.split('.')[-1]
-            timestamp = (f'{structed_time.tm_hour:02d}:{structed_time.tm_min:02d}:'
-                         f'{structed_time.tm_sec:02d}.{mini_time_res}')
+            t = time.strftime("%H:%M:%S", ct)
+            timestamp = f"{t}.{int(record.msecs):03d}"
         else:
-            nano_time_res = f'{now:.06f}'.split('.')[-1]
-            timestamp = (f'{structed_time.tm_year}-{structed_time.tm_mon:02d}-{structed_time.tm_mday:02d} '
-                         f'{structed_time.tm_hour:02d}:{structed_time.tm_min:02d}:'
-                         f'{structed_time.tm_sec:02d}.{nano_time_res}')
+            t = time.strftime("%Y-%m-%d %H:%M:%S", ct)
+            timestamp = f"{t}.{int(record.msecs):03d}"
 
-        return self.LOG_TEMPLATE.render(
-            name=self.name,
-            ansi_style=self.ansi_style,
-            selected_ansi=ANSI_CODE,
-            level_colors=self.LEVEL_COLORS,
-            record=record,
-            timestamp=timestamp
-        )
+        # Get level string with optional ANSI coloring
+        level_name = record.levelname
+        if self.ansi_style:
+            color = self.LEVEL_COLORS.get(level_name, ANSI_CODE.RESET.value)
+            level_str = f"{color} {level_name:<8} {ANSI_CODE.RESET.value}"
+            name_str = f"{ANSI_CODE.CYAN.value}{self.project_name}{ANSI_CODE.RESET.value}"
+            msg_str = f"{ANSI_CODE.WHITE.value if level_name == 'INFO' else ''}{record.getMessage()}{ANSI_CODE.RESET.value}"
+        else:
+            level_str = f"[{level_name:<8}]"
+            name_str = self.project_name
+            msg_str = record.getMessage()
+
+        # Format final output: [Timestamp] [PROJECT] [LEVEL] Message
+        return f"[{timestamp}] [{name_str}] {level_str} {msg_str}"
 
 
 def init_logging(root_name: str,

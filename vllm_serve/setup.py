@@ -127,6 +127,11 @@ class ModelSetup(BaseModel):
         description='Enable logging of requests(e.g., True)',
         default=True
     )
+    enable_prefix_caching: bool = Field(
+        frozen=True,
+        description='Enable vLLM prefix caching(e.g., True)',
+        default=True
+    )
 
     log_base_dir: str = Field(
         frozen=True,

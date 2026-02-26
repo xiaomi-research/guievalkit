@@ -87,6 +87,9 @@ def get_simplified_traceback(max_frames: int = 10) -> str:
     return ''.join(formatted + exception_only)
 
 
+import functools
+
+@functools.lru_cache(maxsize=128)
 def qwen_fetch_image(image_abspath: str, *,
                      min_pixels: int | None = None,
                      max_pixels: int | None = None,

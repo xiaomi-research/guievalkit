@@ -7,6 +7,7 @@ vllm serve {{setup.model}} --served-model-name {{setup.model_alias}} \
     --max-num-batched-tokens {{setup.max_num_batched_tokens}} \
     --max-num-seqs {{setup.max_num_seqs}} \
     --gpu-memory-utilization {{setup.gpu_memory_utilization}} \
+    {% if setup.enable_prefix_caching %}--enable-prefix-caching {% endif%}\
     --limit-mm-per-prompt.image {{setup.image_limit}} --limit-mm-per-prompt.video {{setup.video_limit}} \
     {% if not setup.enable_log_stats %}--disable-log-stats {% endif%}{% if setup.enable_log_requests %}--enable-log-requests{% else %}--no-enable-log-requests{% endif %} \
     --trust-remote-code > {{setup.log_path}}

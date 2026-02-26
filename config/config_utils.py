@@ -22,7 +22,7 @@ class ModelConfig(BaseModel):
     attn_implementation: str | Any
 
 
-MODEL_CONFIGS: dict[tuple[str], ModelConfig] = {
+MODEL_CONFIGS: dict[tuple[str, ...], ModelConfig] = {
     ("agentcpm-gui-8b", ): ModelConfig(
         llm_class=AutoModelForCausalLM,
         tokenizer_class=AutoTokenizer,
@@ -64,15 +64,14 @@ MODEL_CONFIGS: dict[tuple[str], ModelConfig] = {
     ),
 }
 
+# Pre-indexed for performance
+_NAME_TO_CONFIG_INDEX = {name: config for names, config in MODEL_CONFIGS.items() for name in names}
+
 
 def model_config_handler(model_name: str) -> ModelConfig:
-    '''
-    Get the model config for a given model name.
-
-    If the model name is not found, a ValueError will be raised.
-    '''
-    for _names, _config in MODEL_CONFIGS.items():
-        if model_name in _names:
-            return _config
-    else:
-        raise ValueError(f"Model {model_name} not found in {MODEL_CONFIGS}")
+    """
+    Get the model config for a given model name using O(1) lookup.
+    """
+    if model_name in _NAME_TO_CONFIG_INDEX:
+        return _NAME_TO_CONFIG_INDEX[model_name]
+    raise ValueError(f"Model {model_name} not found in model configuration index.")

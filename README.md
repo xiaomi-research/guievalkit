@@ -1,30 +1,27 @@
-# GUIEvalKit: A Unified Toolkit for Evaluating GUI Agents
+# 🎮 GUIEvalKit: The Ultimate Toolkit for GUI Agent Evaluation
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-blue.svg">
-  <img src="https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg">
-  <img src="https://img.shields.io/badge/vLLM-Supported-orange.svg">
-  <img src="https://img.shields.io/github/license/google-research/google-research.svg">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue.svg?logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg?logo=pytorch&logoColor=white">
+  <img src="https://img.shields.io/badge/vLLM-Accelerated-orange.svg?logo=nvidia&logoColor=white">
+  <img src="https://img.shields.io/github/license/gaopengzhi/guievalkit?color=green">
   <img src="https://img.shields.io/github/stars/gaopengzhi/guievalkit?style=social">
 </p>
 
-**GUIEvalKit** is an open-source, high-performance evaluation toolkit designed for next-generation GUI agents. It provides a unified interface to assess multimodal models (LMMs) across various offline benchmarks, ensuring reproducibility and efficiency.
+---
+
+**GUIEvalKit** is an open-source, high-performance evaluation toolkit designed for the next generation of GUI-driven AI agents. It provides a unified, efficient interface to benchmark Vision-Language Models (VLMs) across diverse digital environments (Android, Web, Desktop).
+
+### Why GUIEvalKit?
+*   🎯 **Unified Interface**: One command to evaluate 10+ SOTA GUI models (UI-TARS, Qwen2.5-VL, GLM-4.5v).
+*   ⚡ **Inference Speed**: Native **vLLM** integration for lightning-fast batch inference and online serving.
+*   🧠 **Advanced Reasoning**: Full support for "Chain-of-Thought" and "Thinking" models.
+*   🎨 **Visual Analytics**: Built-in tools to visualize agent actions and failure cases.
+*   📊 **Ready-to-Use Benchmarks**: Out-of-the-box support for AndroidControl, GUI-Odyssey, AiTZ, and CAGUI.
 
 ---
 
-## 🌟 Key Features
-
-*   🚀 **Unified API**: Support for 10+ SOTA GUI models (UI-TARS, Qwen2.5-VL, GLM-4.5v, etc.) with a single interface.
-*   🧠 **Reasoning Support**: Native support for "Thinking" models (e.g., Qwen3-VL-Thinking, GLM-4.1V-Thinking).
-*   ⚡ **High Performance**: Optimized with **vLLM** for both online serving and offline batch inference.
-*   📊 **Comprehensive Benchmarks**: Ready-to-use evaluation on AndroidControl, GUI Odyssey, AiTZ, and more.
-*   🛠️ **Easy Extension**: Add new models or datasets by implementing just a few methods.
-
----
-
-## 🏆 Leaderboard (Preview)
-
-Below is a summary of evaluation results (Step Success Rate %). For full results, see [results.md](./docs/results.md).
+## 🏆 Leaderboard
 
 | Model | Android Control (High) | GUI-Odyssey | AiTZ | CAGUI |
 | :--- | :---: | :---: | :---: | :---: |
@@ -34,24 +31,24 @@ Below is a summary of evaluation results (Step Success Rate %). For full results
 | **Qwen2.5-VL-7B** | 61.40 | 47.92 | 64.73 | 58.48 |
 | **GLM-4.5v** | 59.15 | 48.90 | 48.52 | 69.26 |
 
----
-
-## 🛠️ Installation
-
-We recommend using `uv` for lightning-fast dependency management.
-
-```bash
-pip install uv
-uv venv .venv --python 3.10
-source .venv/bin/activate
-uv pip install -r requirements.txt
-```
+*See [Full Results](./docs/results.md) for detailed metrics and model configurations.*
 
 ---
 
 ## 🚀 Quick Start
 
-Evaluate a model on a specific benchmark with one command:
+### 1. Installation
+We recommend using `uv` for 10x faster installation.
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv .venv --python 3.10
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+### 2. Run Evaluation
+Evaluate any model on any benchmark with a single command:
 
 ```bash
 python3 run.py all \
@@ -62,50 +59,62 @@ python3 run.py all \
 
 ---
 
-## 📂 Supported Models & Benchmarks
+## 🎨 Visualizing Agent Actions
+GUIEvalKit includes a powerful **Profiler** that helps you understand *why* your agent failed. It generates overlays of the model's predicted actions on the original UI screenshots.
+
+*(GIF/Image placeholder: Action visualization demo)*
+
+---
+
+## 📂 Ecosystem Support
 
 <details>
-<summary><b>Click to expand supported models</b></summary>
+<summary><b>Supported Models (15+)</b></summary>
 
-| Organization | Models |
-| :--- | :--- |
-| **Alibaba** | Qwen2.5-VL, Qwen3-VL, GUI-Owl |
-| **Bytedance** | UI-TARS (SFT/DPO), UI-TARS-1.5 |
-| **Zhipu AI** | GLM-4.1V-Thinking, GLM-4.5v |
-| **Ant Group** | UI-Venus-Navi |
-| **ModelBest** | AgentCPM-GUI |
-| **Others** | MiMo-VL, MagicGUI |
+*   **Alibaba**: Qwen2.5-VL, Qwen3-VL, GUI-Owl
+*   **Bytedance**: UI-TARS (SFT/DPO), UI-TARS-1.5
+*   **Zhipu AI**: GLM-4.1V-Thinking, GLM-4.5v
+*   **Ant Group**: UI-Venus-Navi
+*   **ModelBest**: AgentCPM-GUI
+*   **DeepSeek**: DeepSeek-VL2
+*   **Others**: MiMo-VL, MagicGUI
 </details>
 
 <details>
-<summary><b>Click to expand supported benchmarks</b></summary>
+<summary><b>Supported Benchmarks</b></summary>
 
-*   **AndroidControl**: Comprehensive Android task execution.
-*   **GUI Odyssey**: Cross-platform GUI navigation tasks.
-*   **AiTZ**: Action-in-the-Wild datasets.
-*   **CAGUI**: Large-scale GUI agent benchmark.
+*   **AndroidControl**: Complex Android task execution.
+*   **GUI-Odyssey**: Large-scale cross-platform GUI navigation.
+*   **AiTZ (Action-in-the-Wild)**: Real-world smartphone tasks.
+*   **CAGUI**: Collaborative Android GUI evaluation.
 </details>
 
 ---
 
-## 🏗️ Development & Contribution
+## 🛠️ Development & Customization
 
-Want to add your own model? It's as simple as inheriting from `ABCModel`. Check our [Development Guide](./docs/development.md) for details.
+GUIEvalKit is built for extensibility. Adding a new model is as simple as:
 
-We welcome contributions! Please feel free to submit PRs or open issues.
+1.  Inherit from `ABCModel`.
+2.  Implement `prepare_task_input` and `parse_response`.
+3.  Register your model in the registry.
+
+Check our [Development Guide](./docs/development.md) for more details.
+
+---
+
+## 🗺️ Roadmap
+- [ ] Support for **Desktop GUI** (Windows/Linux) evaluation.
+- [ ] Integration with **Gymnasium** for RL-based agent training.
+- [ ] **Web GUI** benchmark (WebShop, Mind2Web) integration.
+- [ ] Interactive HTML report generation for evaluation results.
 
 ---
 
-## 📜 Acknowledgement
-
-This project is built upon the great works of [AgentCPM-GUI/eval](https://github.com/OpenBMB/AgentCPM-GUI/tree/main/eval) and [VLMEvalKit](https://github.com/open-compass/VLMEvalKit).
-
----
+## 🤝 Contributing & Support
+We welcome contributions! Please open an issue or submit a PR. If you like this project, please consider giving it a ⭐!
 
 ## 📑 Citation
-
-If you find this toolkit useful for your research, please consider citing:
-
 ```bibtex
 @misc{guievalkit2025,
   author = {Pengzhi Gao},
