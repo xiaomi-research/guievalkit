@@ -1,26 +1,26 @@
 {
   "aitz": {
-    "folder_name": "data/android_in_the_zoo",
+    "folder_name": "android_in_the_zoo",
     "split": "test",
     "subset": ["general", "google_apps", "install", "web_shopping"]
   },
   "androidcontrol_high":{
-    "folder_name": "data/android_control",
+    "folder_name": "android_control",
     "split": "test",
     "subset": ["android_control"]
   },
   "androidcontrol_low":{
-    "folder_name": "data/android_control",
+    "folder_name": "android_control",
     "split": "test",
     "subset": ["android_control"]
   },
   "cagui_agent": {
-    "folder_name": "data/cagui_agent",
+    "folder_name": "cagui_agent",
     "split": "test",
     "subset": ["domestic"]
   },
   "gui_odyssey": {
-    "folder_name": "data/gui_odyssey",
+    "folder_name": "gui_odyssey",
     "split": "test",
     "subset": ["gui_odyssey"]
   }
