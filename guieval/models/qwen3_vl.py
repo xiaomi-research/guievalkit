@@ -3,24 +3,19 @@ import math
 import numpy as np
 import random
 import re
-import logging
 import json
 
 from typing import Any, Literal, Sequence, Union, Dict
 from vllm import SamplingParams
 
-# subsec internal
 from guieval.main import StepTaskModel
 from guieval.utils import ActionType
 from guieval.models.utils import *
-from guieval.models.utils.abcmodel import *
+from guieval.models.abcmodel import *
 from guieval.utils.action_utils import is_tap_action, get_direction
 from guieval.models.resources.qwen_vl.sys_prompt_builder import build as build_sys_prompt
 
-
 # section struct
-logger = logging.getLogger(__name__)
-
 QUERY_TEMPLATE = ("The user query: {instruction}.\n"
                   "Task progress (You have done the following operation on the current device): {history}.\n")
 ACTIONS = {'click', 'long_press', 'swipe', 'type', 'answer', 'system_button', 'wait', 'terminate'}
@@ -34,12 +29,13 @@ _INSTRUCT_SAMPLING_PARAMS = SamplingParams(
     presence_penalty=1.5,
     max_tokens=2048,
     n=1)
-_THINKING_SAMPLING_PARMAS = SamplingParams(
+
+_THINKING_SAMPLING_PARAMS = SamplingParams(
     top_p=0.95,
     top_k=20,
+    temperature=1.0,
     repetition_penalty=1.0,
     presence_penalty=0.0,
-    temperature=1.0,
     max_tokens=2048,
     n=1)
 
@@ -49,7 +45,7 @@ class KeyMismatchError(Exception):
 
 
 def build_user_message(instruction: str, conclusions: Sequence[str], image_url: str, *,
-                       enable_conclude: bool = True, enable_think: bool = True) -> dict:
+                       enable_conclude: bool = True, enable_think: bool = True) -> list[dict]:
     history = ' '.join(f'Step {idx + 1}: {_conclusion};' for idx, _conclusion in enumerate(conclusions))
     user_query = QUERY_TEMPLATE.format(instruction=instruction, history=history)
     return [
@@ -73,18 +69,25 @@ def build_user_message(instruction: str, conclusions: Sequence[str], image_url: 
 # section main
 @ModelRegistry.register()
 class Qwen3VL(ABCModel):
-    NAMES = ("qwen3-vl-4b-instruct", "qwen3-vl-4b-thinking", "qwen3-vl-8b-instruct", "qwen3-vl-8b-thinking")
+    NAMES = ("qwen3-vl-4b-instruct",
+             "qwen3-vl-4b-thinking",
+             "qwen3-vl-8b-instruct",
+             "qwen3-vl-8b-thinking",
+             "qwen3-vl-32b-instruct",
+             "qwen3-vl-32b-thinking")
     MODEL_PATTERNS = ModelPatterns(answer_pattern=r'<tool_call>(.*)</tool_call>',
                                    answer_flags=[re.DOTALL, ],
-                                   thinking_pattern=r'Thought:(.*?)(?=Action|<tool_call>)',
+                                   thinking_pattern=r'(.*)</think>|Thought:(.*?)(?=Action|<tool_call>)',
                                    thinking_flags=[re.DOTALL, ],
                                    conclusion_pattern=r'Action:(.*?)(?=<tool_call>)',
                                    conclusion_flags=[re.DOTALL, ])
     DEFAULT_SAMPLING_PARAMS: dict[str, SamplingParams] = {
         "qwen3-vl-4b-instruct": _INSTRUCT_SAMPLING_PARAMS,
-        "qwen3-vl-4b-thinking": _THINKING_SAMPLING_PARMAS,
+        "qwen3-vl-4b-thinking": _THINKING_SAMPLING_PARAMS,
         "qwen3-vl-8b-instruct": _INSTRUCT_SAMPLING_PARAMS,
-        "qwen3-vl-8b-thinking": _THINKING_SAMPLING_PARMAS
+        "qwen3-vl-8b-thinking": _THINKING_SAMPLING_PARAMS,
+        "qwen3-vl-32b-instruct": _INSTRUCT_SAMPLING_PARAMS,
+        "qwen3-vl-32b-thinking": _THINKING_SAMPLING_PARAMS
     }
 
     @first_level_parser.validate_patterns(MODEL_PATTERNS)
@@ -98,6 +101,7 @@ class Qwen3VL(ABCModel):
                 answer = json.loads(answer_json_block)
             except json.JSONDecodeError:
                 answer = ParserTools.parse_json_dict_block(answer_str)
+                # raise AttributeError if no parseable braced json block is found
             except AttributeError:
                 try:
                     function_name = re.search(r'"name".*:.*"(.*)".*"arguments"', answer_str, re.DOTALL).group(1)
@@ -120,11 +124,14 @@ class Qwen3VL(ABCModel):
 
             action = answer['arguments']['action']
             arguments = dict(_item for _item in answer['arguments'].items() if 'action' not in _item)
+            thought = (None if parsed_matches['thought'] is None else
+                       ParserTools.enhanced_strip(parsed_matches['thought'].group(1))
+                       if parsed_matches['thought'].group(1) else
+                       ParserTools.enhanced_strip(parsed_matches['thought'].group(2)))
             return dict(action=action,
                         arguments=arguments,
                         answer=answer_str,
-                        thinking=(None if parsed_matches["thinking"] is None else
-                                  ParserTools.enhanced_strip(parsed_matches["thinking"].group(1))),
+                        thought=thought,
                         conclusion=(None if parsed_matches["conclusion"] is None else
                                     ParserTools.enhanced_strip(parsed_matches["conclusion"].group(1))))
         except Exception:
@@ -132,10 +139,10 @@ class Qwen3VL(ABCModel):
 
     def model_2_minicpm(self, output_text, *args) -> MINICPM_ACTION:
         try:
-            parsed_response: Dict[Literal['action', 'arguments', 'thinking', 'conclusion'],
+            parsed_response: Dict[Literal['action', 'arguments', 'thought', 'conclusion'],
                                   Union[Dict, Any]] = self.parse_response(output_text)
         except Exception as err:
-            logger.debug(f"Error. No valid `ModelPatterns` Extraction:\n\t{err}")
+            self._logger.debug(f"Error. No valid `ModelPatterns` Extraction:\n\t{err}")
             return {'action': None,
                     'arguments': dict()}
 
@@ -196,23 +203,22 @@ class Qwen3VL(ABCModel):
             return {'action': None,
                     'arguments': {'TYPE': content}}
         else:
-            logger.info(f"Unrecognized action during remormulation: {parsed_response['action']}")
+            self._logger.info(f"Unrecognized action during reformulation: {parsed_response['action']}")
             return {'action': None,
                     'arguments': dict()}
 
-    @staticmethod
-    def aitw_2_model_action(step_task: StepTaskModel, *args) -> MODEL_ACTION:
+    def aitw_2_model_action(self, step_task: StepTaskModel, *args) -> MODEL_ACTION:
         action_type = step_task.result_action_type
         if action_type == ActionType.DUAL_POINT:
-            lift_yx = json.loads(step_task.result_lift_yx)
-            touch_yx = json.loads(step_task.result_touch_yx)
+            lift_yx = np.array(json.loads(step_task.result_lift_yx)) * 1000
+            touch_yx = np.array(json.loads(step_task.result_touch_yx)) * 1000
             if is_tap_action(np.array(touch_yx), np.array(lift_yx)):
                 click_y_min = int(touch_yx[0])
                 click_x_min = int(touch_yx[1])
                 click_y_max = int(lift_yx[0])
                 click_x_max = int(lift_yx[1])
                 coordinate = [math.ceil((click_x_max + click_x_min) / 2),
-                            math.ceil((click_y_max + click_y_min) / 2)]
+                              math.ceil((click_y_max + click_y_min) / 2)]
                 return {'action': 'click',
                         'arguments': dict(coordinate=coordinate)}
             else:
@@ -244,8 +250,8 @@ class Qwen3VL(ABCModel):
             return {'action': 'terminate',
                     'arguments': dict(status='failure')}
         elif action_type == ActionType.LONG_POINT:
-            lift_yx = json.loads(step_task.result_lift_yx)
-            touch_yx = json.loads(step_task.result_touch_yx)
+            lift_yx = np.array(json.loads(step_task.result_lift_yx)) * 1000
+            touch_yx = np.array(json.loads(step_task.result_touch_yx)) * 1000
             click_y_min = int(touch_yx[0])
             click_x_min = int(touch_yx[1])
             click_y_max = int(lift_yx[0])
@@ -259,16 +265,30 @@ class Qwen3VL(ABCModel):
             return {'action': 'wait',
                     'arguments': dict(time=random.randint(3, 10))}
         else:
-            logger.info(f'Task {step_task.episode_id} step {step_task.step_id} '
+            self._logger.info(f'Task {step_task.episode_id} step {step_task.step_id} '
                         f'Action type `{ActionType(action_type).name}` not supported for Qwen3-VL.')
             return {'action': None,
                     'arguments': dict()}
 
     @staticmethod
-    def model_2_contents(step_task, action, *, online: bool = False) -> HistoryContent:
-        if online and step_task.evaluation.exact_match:
-            return {'content': step_task.conclusion,  # history content required by Qwen3-VL is the action conclusion.
-                    'source': 'online'}
+    def model_2_contents(history_step_task, current_step_task, action, *,
+                         expected_content_source) -> HistoryContent:
+        if expected_content_source == "online_pos" and history_step_task.evaluate().exact_match:
+            return {'content': history_step_task.conclusion,
+                     # history content required by Qwen3-VL is the action conclusion.
+                    'source': 'online_pos'}
+        elif (expected_content_source == "online_neg"
+              and not history_step_task.evaluate().exact_match
+              and history_step_task.pred_action is not None):
+            return {'content': history_step_task.conclusion,
+                    'source': 'online_neg'}
+        elif ((expected_content_source == "low_instruction"
+               or current_step_task.history_content_source_choices[1] == "low_instruction")
+               # 综合在 choices 中第二项是否给出 "low_instruction" 的整体行为，等价于是否给对应选项第二最高优先级
+              and history_step_task.low_instruction):
+            return {'content': history_step_task.low_instruction,
+                    'source': 'low_instruction'}
+
         if action['action'] == 'click':
             coordinate = action['arguments'].get('coordinate')
             return {'content': f'Click {coordinate}' if coordinate else 'Click Unknown coordinate',
@@ -314,6 +334,12 @@ class Qwen3VL(ABCModel):
                                                  image_url=step_task.image_abspaths[0],
                                                  enable_conclude=step_task.enable_conclude,
                                                  enable_think=step_task.enable_think)
+
+        if step_task.fixed_thought and raw_input['fixed_thought']:
+            formulated_messages.append({
+                "role": "fixed_thought",
+                "content": [{"type": "text", "text": raw_input['fixed_thought']}]
+            })
 
         step_task.formulated_messages = formulated_messages
         step_task.history_content_srcs = raw_input['history_content_srcs']

@@ -5,7 +5,6 @@ import random
 import re
 import logging
 import json
-
 from string import Template
 from typing import Any, Literal, Sequence, Union, Dict
 from vllm import SamplingParams
@@ -14,7 +13,7 @@ from vllm import SamplingParams
 from guieval.main import StepTaskModel
 from guieval.utils import ActionType
 from guieval.models.utils import *
-from guieval.models.utils.abcmodel import *
+from guieval.models.abcmodel import *
 from guieval.utils.action_utils import is_tap_action, get_direction
 from guieval.models.resources.qwen_vl.sys_prompt_builder import build as build_sys_prompt
 
@@ -113,6 +112,7 @@ class Qwen2_5VL(ABCModel):
                 answer = json.loads(answer_json_block)
             except json.JSONDecodeError:
                 answer = ParserTools.parse_json_dict_block(answer_str)
+                # raise AttributeError if no parseable braced json block is found
             except AttributeError:
                 try:
                     function_name = re.search(r'"name".*:.*"(.*)".*"arguments"', answer_str, re.DOTALL).group(1)
@@ -138,8 +138,8 @@ class Qwen2_5VL(ABCModel):
             return dict(action=action,
                         arguments=arguments,
                         answer=answer_str,
-                        thinking=(None if parsed_matches["thinking"] is None else
-                                  ParserTools.enhanced_strip(parsed_matches["thinking"].group(1))),
+                        thought=(None if parsed_matches["thought"] is None else
+                                  ParserTools.enhanced_strip(parsed_matches["thought"].group(1))),
                         conclusion=(None if parsed_matches["conclusion"] is None else
                                     ParserTools.enhanced_strip(parsed_matches["conclusion"].group(1))))
         except Exception:
@@ -147,7 +147,7 @@ class Qwen2_5VL(ABCModel):
 
     def model_2_minicpm(self, output_text, width, height) -> MINICPM_ACTION:
         try:
-            parsed_response: Dict[Literal['action', 'arguments', 'thinking', 'conclusion'],
+            parsed_response: Dict[Literal['action', 'arguments', 'thought', 'conclusion'],
                                   Union[Dict, Any]] = self.parse_response(output_text)
         except Exception as err:
             logger.debug(f"Error. No valid `ModelPatterns` Extraction:\n\t{err}")
@@ -199,7 +199,7 @@ class Qwen2_5VL(ABCModel):
 
             # action with predefined choices actually means special action for each.
             # which means predefined choice not in unified action space, is indeed a special action.
-            # Thus we assign None to the action type during parsing
+            # Thus we assign None to the action type during parsing,
             # to avoid confusion between `match action` and `match arguments with matched action`
             # sample with action type assigned to None would not be included in the final evaluation.
             # Action still reserved for symmetry.
@@ -288,16 +288,22 @@ class Qwen2_5VL(ABCModel):
                     'arguments': dict()}
 
     @staticmethod
-    def model_2_contents(step_task, action, *, online: bool = False) -> HistoryContent:
-        if online and step_task.evaluation.exact_match:
-            return {'content': step_task.answer,  # history content required by qwen2.5vl is the answer.
-                    'source': 'online'}
-        else:
-            answer = json.dumps(dict(name="mobile_use",
-                                     arguments=dict(action=action.get('action'),
-                                                    **action.get('arguments'))))
-            return {'content': answer,
-                    'source': 'offline_rule'}
+    def model_2_contents(history_step_task, current_step_task, action, *,
+                         expected_content_source) -> HistoryContent:
+        if expected_content_source == "online_pos" and history_step_task.evaluate().exact_match:
+            return {'content': history_step_task.answer,  # history content required by qwen2.5vl is the answer.
+                    'source': 'online_pos'}
+        elif (expected_content_source == "online_neg"
+              and not history_step_task.evaluate().exact_match
+              and history_step_task.pred_action is not None):
+            return {'content': history_step_task.answer,
+                    'source': 'online_neg'}
+
+        answer = json.dumps(dict(name="mobile_use",
+                                    arguments=dict(action=action.get('action'),
+                                                **action.get('arguments'))))
+        return {'content': answer,
+                'source': 'offline_rule'}
 
     def prepare_task_input(self, step_task: StepTaskModel, *,
                            image_memory: int = 1,

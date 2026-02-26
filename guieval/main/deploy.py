@@ -2,14 +2,14 @@ import threading
 import logging
 from typing import Sequence, overload
 from typing_extensions import Self
-from vllm import LLM, SamplingParams, RequestOutput, PromptType
+from vllm import LLM, SamplingParams, PromptType
 from PIL import Image
 
-# subsec internal
+# internal
 from config import model_config_handler
 from vllm_serve import DeployModel, ExtraInferenceSetup
-from vllm_serve.utils import Messages, process_vision_content
-from guieval.config import EvalTaskConfig
+from vllm_serve.utils import Messages, StrictMessages, process_vision_content
+from guieval.main.config import EvalTaskConfig
 
 
 logger = logging.getLogger(__name__)
@@ -132,24 +132,27 @@ class DeployedModel:
     def worker(self) -> LLM:
         return self._worker
 
-    @overload
+    @overload  # noqa: E301
     def wrapped_generate(self, *,
                          messages: Messages | None = None,
                          images: list[Image.Image] | None = None,
                          sampling_params: SamplingParams | None = None,
-                         extra_params: ExtraInferenceSetup | None = None) -> str:
+                         extra_params: ExtraInferenceSetup | None = None) -> list[str]:
         ...
     @overload  # noqa: E301
     def wrapped_generate(self, *,
                          prompt: PromptType | Sequence[PromptType] | None = None,
-                         sampling_params: SamplingParams | None = None) -> RequestOutput | list[RequestOutput]:
+                         sampling_params: SamplingParams | None = None) -> list[list[str]]:
         ...
     def wrapped_generate(self, *,  # noqa: E301
                          messages: Messages | None = None,
+                         strict_messages: StrictMessages | None = None,
                          images: list[Image.Image] | None = None,
                          prompt: PromptType | Sequence[PromptType] = None,
                          sampling_params: SamplingParams | None = None,
-                         extra_params: ExtraInferenceSetup | None = None) -> str | RequestOutput | list[RequestOutput]:
+                         extra_params: ExtraInferenceSetup | None = None) -> str | list[str] | list[list[str]]:
+        if strict_messages is not None:
+            return self._worker(messages=strict_messages, sampling_params=sampling_params, extra_params=extra_params)
         # Determine which signature is being used based on non-None arguments
         has_messages = (messages is not None)
         has_prompt = (prompt is not None)
@@ -175,6 +178,7 @@ class DeployedModel:
                 raise ValueError("Prompt provided but not in offline mode")
             if sampling_params is None:
                 raise ValueError("sampling_params required for offline mode")
-            outputs = self._worker.generate(prompt, sampling_params=sampling_params, use_tqdm=False)
+            request_outputs = self._worker.generate(prompt, sampling_params=sampling_params, use_tqdm=False)
 
-            return [output.outputs[0].text for output in outputs]
+            return [[output.text for output in request_output.outputs]
+                    for request_output in request_outputs]

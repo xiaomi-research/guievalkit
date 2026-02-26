@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import itertools
 import traceback
@@ -7,6 +8,7 @@ import sys
 from PIL import Image
 from qwen_vl_utils import fetch_image
 from typing import Generator, Iterable
+from vllm import SamplingParams
 
 import logging
 
@@ -118,3 +120,15 @@ def qwen_fetch_image(image_abspath: str, *,
             image_info['max_pixels'] = max_pixels
         return (fetch_image(image_info) if patch_size is None else
                 fetch_image(image_info, image_patch_size=patch_size))
+
+
+def repr_sampling_params(sampling_params: SamplingParams) -> str:
+    try:
+        params = re.search(r'^SamplingParams\((.*)\)$', repr(sampling_params), re.DOTALL).group(1)
+        return '\n'.join(
+            param.strip() for param in params.split(',')
+        )
+    except Exception:
+        logger.error('Passed `SamplingParams` not parsable for current pattern. '
+                     'Gonna show the raw representation.')
+        return repr(sampling_params)

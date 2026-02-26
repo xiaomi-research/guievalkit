@@ -2,8 +2,8 @@ import re
 import inspect
 import json
 from pydantic import BaseModel, AfterValidator, model_validator
-from typing import (Annotated, Sequence, Callable, TypedDict, Any)
-from typing_extensions import Self
+from typing import (Annotated, Sequence, Callable, Any)
+from typing_extensions import Self, TypedDict
 from string import Template
 
 
@@ -51,7 +51,6 @@ class ParserTools:
         '''
         Parse the JSON dictionary block in the string.
         The returned dictionary is the parsed JSON dictionary.
-
         Raise AttributeError if no parseable braced json block is found.
 
         Args:
@@ -120,8 +119,7 @@ class ModelPatterns(BaseModel):
     answer_pattern: Annotated[str | re.Pattern | None,
                               AfterValidator(_tolerantly_compile)] = re.compile(r'<tool_call>.*({.*}).*</tool_call>',
                                                                                 re.DOTALL)
-    answer_flags: Annotated[re.RegexFlag | list[re.RegexFlag] | None,
-                            AfterValidator(_unite_flags)] = None
+    answer_flags: Annotated[re.RegexFlag | list[re.RegexFlag] | None, AfterValidator(_unite_flags)] = None
 
     thinking_pattern: Annotated[str | re.Pattern | None,
                                 AfterValidator(_tolerantly_compile)] = re.compile(r'<thinking>(.*)</thinking>',
@@ -131,8 +129,7 @@ class ModelPatterns(BaseModel):
     conclusion_pattern: Annotated[str | re.Pattern | None,
                                   AfterValidator(_tolerantly_compile)] = re.compile(r'<conclusion>(.*)</conclusion>',
                                                                                     re.DOTALL)
-    conclusion_flags: Annotated[re.RegexFlag | list[re.RegexFlag] | None,
-                                AfterValidator(_unite_flags)] = None
+    conclusion_flags: Annotated[re.RegexFlag | list[re.RegexFlag] | None, AfterValidator(_unite_flags)] = None
 
     @model_validator(mode='after')
     def _compile_with_flags(self) -> Self:
@@ -190,7 +187,7 @@ class ModelPatternExtractionError(Exception):
 
 class PARSED_MATCHES(TypedDict):
     answer: re.Match | None
-    thinking: re.Match | None
+    thought: re.Match | None
     conclusion: re.Match | None
 
     error: ModelPatternExtractionError
@@ -199,7 +196,7 @@ class PARSED_MATCHES(TypedDict):
 class first_level_parser(ModelPatterns):
     '''
     A instantiatable decorator for method or function to parse the response of the model.
-    The returned dictionary is the parsed `re.Match` objects for `answer`, `thinking`, and `conclusion`.
+    The returned dictionary is the parsed `re.Match` objects for `answer`, `thought`, and `conclusion`.
 
     Args:
         patterns (ModelPatterns): The patterns to parse the response.
@@ -221,7 +218,7 @@ class first_level_parser(ModelPatterns):
         def method_wrapper(instance, resp: str):
             parsed_matches = dict(
                 answer=self.search_answer(resp=resp),
-                thinking=self.search_thinking(resp=resp),
+                thought=self.search_thinking(resp=resp),
                 conclusion=self.search_conclusion(resp=resp),
                 error=ModelPatternExtractionError(text=resp)
             )
@@ -230,7 +227,7 @@ class first_level_parser(ModelPatterns):
         def class_method_wrapper(cls, resp: str):
             parsed_matches = dict(
                 answer=self.search_answer(resp=resp),
-                thinking=self.search_thinking(resp=resp),
+                thought=self.search_thinking(resp=resp),
                 conclusion=self.search_conclusion(resp=resp),
                 error=ModelPatternExtractionError(text=resp)
             )
@@ -239,7 +236,7 @@ class first_level_parser(ModelPatterns):
         def function_wrapper(resp: str):
             parsed_matches = dict(
                 answer=self.search_answer(resp=resp),
-                thinking=self.search_thinking(resp=resp),
+                thought=self.search_thinking(resp=resp),
                 conclusion=self.search_conclusion(resp=resp),
                 error=ModelPatternExtractionError(text=resp)
             )
